@@ -45,7 +45,8 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:id
 // @access  Public
 const getProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({ id: req.params.id }).populate("currentAllotmentId")
+  console.log("Fetching product with ID:", req.params.id)
+  const product = await Product.findOne({ _id: req.params.id }).populate("currentAllotmentId")
 
   if (!product) {
     return res.status(404).json({
@@ -84,7 +85,7 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Public
 const updateProduct = asyncHandler(async (req, res) => {
-  let product = await Product.findOne({ id: req.params.id })
+  let product = await Product.findOne({ _id: req.params.id })
 
   if (!product) {
     return res.status(404).json({
@@ -93,7 +94,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     })
   }
 
-  product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, {
+  product = await Product.findOneAndUpdate({ _id: req.params.id }, req.body, {
     new: true,
     runValidators: true,
   })
@@ -108,7 +109,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 // @route   DELETE /api/products/:id
 // @access  Public
 const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({ id: req.params.id })
+  const product = await Product.findOne({ _id: req.params.id })
 
   if (!product) {
     return res.status(404).json({
@@ -125,7 +126,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
     })
   }
 
-  await Product.findOneAndDelete({ id: req.params.id })
+  await Product.findOneAndDelete({ _id: req.params.id })
 
   res.status(200).json({
     success: true,

@@ -8,13 +8,13 @@ require("dotenv").config()
 
 // Import routes
 const authRoutes = require("./routes/authRoutes")
-// const productRoutes = require("./routes/productRoutes")
-// const organizationRoutes = require("./routes/organizationRoutes")
+const productRoutes = require("./routes/productRoutes")
+const organizationRoutes = require("./routes/organizationRoutes")
 // const allotmentRoutes = require("./routes/allotmentRoutes")
 // const surrenderRoutes = require("./routes/surrenderRoutes")
 // const invoiceRoutes = require("./routes/invoiceRoutes")
 // const dashboardRoutes = require("./routes/dashboardRoutes")
-// const uploadRoutes = require("./routes/uploadRoutes")
+const uploadRoutes = require("./routes/uploadRoutes")
 
 // // Import middleware
 // const errorHandler = require("./middleware/errorHandler")
@@ -54,13 +54,13 @@ app.use(express.urlencoded({ extended: true}))
 
 // Routes
 app.use("/api/auth", authRoutes)
-// app.use("/api/products", productRoutes)
-// app.use("/api/organizations", organizationRoutes)
+app.use("/api/products", productRoutes)
+app.use("/api/organizations", organizationRoutes)
 // app.use("/api/allotments", allotmentRoutes)
 // app.use("/api/surrenders", surrenderRoutes)
 // app.use("/api/invoices", invoiceRoutes)
 // app.use("/api/dashboard", dashboardRoutes)
-// app.use("/api/upload", uploadRoutes)
+app.use("/api/upload", uploadRoutes)
 
 // Health check route
 app.get("/api/health", (req, res) => {
