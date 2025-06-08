@@ -1,7 +1,6 @@
-import React from 'react'
-import { useState } from "react";
+import React, { useState } from "react";
 
-const RegisterForm = () => {
+const RegisterForm = ({ onSubmit, loading, error }) => {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -10,7 +9,9 @@ const RegisterForm = () => {
     company: "",
     password: "",
     confirmPassword: "",
-    agreed: false
+    agreed: false,
+    department: "",
+    role: "user", // default role, you can change as needed
   });
 
   const handleChange = (e) => {
@@ -27,8 +28,20 @@ const RegisterForm = () => {
       alert("Passwords do not match");
       return;
     }
-    console.log(form);
-    // add API call logic here
+    if (!form.agreed) {
+      alert("You must agree to the Terms and Conditions.");
+      return;
+    }
+    // Prepare data for API
+    const payload = {
+      name: `${form.firstName} ${form.lastName}`.trim(),
+      email: form.email,
+      password: form.password,
+      role: form.role,
+      phone: form.phone,
+      department: form.department,
+    };
+    onSubmit(payload);
   };
 
   return (
@@ -36,14 +49,16 @@ const RegisterForm = () => {
       <h2 className="text-2xl font-semibold mb-4 text-center">Create your account</h2>
       <p className="text-center text-sm text-gray-500 mb-6">Or sign in to existing account</p>
       <div className="grid grid-cols-2 gap-4">
-        <input name="firstName" placeholder="First name" onChange={handleChange} className="input" />
-        <input name="lastName" placeholder="Last name" onChange={handleChange} className="input" />
+        <input name="firstName" placeholder="First name" onChange={handleChange} className="input" required />
+        <input name="lastName" placeholder="Last name" onChange={handleChange} className="input" required />
       </div>
-      <input name="email" placeholder="Email address" onChange={handleChange} className="input mt-4" />
+      <input name="email" type="email" placeholder="Email address" onChange={handleChange} className="input mt-4" required />
       <input name="phone" placeholder="Phone number" onChange={handleChange} className="input mt-4" />
+      <input name="department" placeholder="Department" onChange={handleChange} className="input mt-4" required />
+      {/* <input name="role" placeholder="Role" onChange={handleChange} className="input mt-4" value={form.role} required /> */}
       <input name="company" placeholder="Company (optional)" onChange={handleChange} className="input mt-4" />
-      <input type="password" name="password" placeholder="Password" onChange={handleChange} className="input mt-4" />
-      <input type="password" name="confirmPassword" placeholder="Confirm password" onChange={handleChange} className="input mt-4" />
+      <input type="password" name="password" placeholder="Password" onChange={handleChange} className="input mt-4" required />
+      <input type="password" name="confirmPassword" placeholder="Confirm password" onChange={handleChange} className="input mt-4" required />
 
       <div className="mt-4 flex items-center">
         <input type="checkbox" name="agreed" onChange={handleChange} className="mr-2" />
@@ -52,7 +67,11 @@ const RegisterForm = () => {
         </span>
       </div>
 
-      <button type="submit" className="w-full mt-6 bg-green-600 text-white py-2 rounded">Create Account</button>
+      {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+
+      <button type="submit" className="w-full mt-6 bg-green-600 text-white py-2 rounded" disabled={loading}>
+        {loading ? "Registering..." : "Create Account"}
+      </button>
 
       <div className="flex items-center my-4">
         <hr className="flex-1" />

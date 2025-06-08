@@ -11,13 +11,21 @@ const getAllotments = asyncHandler(async (req, res) => {
   const page = Number.parseInt(req.query.page) || 1
   const limit = Number.parseInt(req.query.limit) || 10
   const skip = (page - 1) * limit
-
+console.log('req.query:', req.query)
   // Build filter object
   const filter = {}
   if (req.query.status) filter.status = req.query.status
   if (req.query.organizationId) filter.organizationId = req.query.organizationId
   if (req.query.laptopId) filter.laptopId = req.query.laptopId
-
+console.log("Filter:", filter)
+if (req.query.laptopId) {
+  // Convert your custom "id" to Mongo _id
+  const product = await Product.findOne({ id: req.query.laptopId });
+  if (!product) {
+    return res.status(404).json({ success: false, message: "Laptop not found" });
+  }
+  filter.laptopId = product._id;
+}
   const allotments = await Allotment.find(filter)
     .populate({
       path: "laptopId",
@@ -49,7 +57,7 @@ const getAllotments = asyncHandler(async (req, res) => {
 // @route   GET /api/allotments/:id
 // @access  Public
 const getAllotment = asyncHandler(async (req, res) => {
-  const allotment = await Allotment.findOne({ id: req.params.id }).populate("laptopId").populate("organizationId")
+  const allotment = await Allotment.findOne({ _id: req.params.id }).populate("laptopId").populate("organizationId")
 
   if (!allotment) {
     return res.status(404).json({
@@ -71,14 +79,14 @@ const createAllotment = asyncHandler(async (req, res) => {
   const { laptopId, organizationId } = req.body
 
   // Check if laptop exists and is available
-  const laptop = await Product.findOne({ id: laptopId })
+  const laptop = await Product.findOne({ _id: laptopId })
   if (!laptop) {
     return res.status(404).json({
       success: false,
       message: "Laptop not found",
     })
   }
-
+console.log("Laptop found:", laptop)
   if (laptop.status !== "Available") {
     return res.status(400).json({
       success: false,
@@ -87,7 +95,7 @@ const createAllotment = asyncHandler(async (req, res) => {
   }
 
   // Check if organization exists
-  const organization = await Organization.findOne({ id: organizationId })
+  const organization = await Organization.findOne({ _id: organizationId })
   if (!organization) {
     return res.status(404).json({
       success: false,
@@ -110,7 +118,7 @@ const createAllotment = asyncHandler(async (req, res) => {
 
   // Update laptop status and current allotment
   await Product.findOneAndUpdate(
-    { id: laptopId },
+    { _id: laptopId },
     {
       status: "Allotted",
       currentAllotmentId: allotment._id,
@@ -119,7 +127,7 @@ const createAllotment = asyncHandler(async (req, res) => {
 
   // Update organization stats
   await Organization.findOneAndUpdate(
-    { id: organizationId },
+    { _id: organizationId },
     {
       $inc: {
         totalAllotments: 1,
@@ -140,7 +148,7 @@ const createAllotment = asyncHandler(async (req, res) => {
 // @route   PUT /api/allotments/:id
 // @access  Public
 const updateAllotment = asyncHandler(async (req, res) => {
-  let allotment = await Allotment.findOne({ id: req.params.id })
+  let allotment = await Allotment.findOne({ _id: req.params.id })
 
   if (!allotment) {
     return res.status(404).json({
@@ -149,7 +157,7 @@ const updateAllotment = asyncHandler(async (req, res) => {
     })
   }
 
-  allotment = await Allotment.findOneAndUpdate({ id: req.params.id }, req.body, {
+  allotment = await Allotment.findOneAndUpdate({ _id: req.params.id }, req.body, {
     new: true,
     runValidators: true,
   })
@@ -168,7 +176,7 @@ const updateAllotment = asyncHandler(async (req, res) => {
 const extendAllotment = asyncHandler(async (req, res) => {
   const { extensionDays, newRent, notes } = req.body
 
-  const allotment = await Allotment.findOne({ id: req.params.id })
+  const allotment = await Allotment.findOne({ _id: req.params.id })
 
   if (!allotment) {
     return res.status(404).json({
@@ -186,7 +194,8 @@ const extendAllotment = asyncHandler(async (req, res) => {
 
   const previousDueDate = allotment.dueDate
   const newDueDate = new Date(previousDueDate.getTime() + extensionDays * 24 * 60 * 60 * 1000)
-
+console.log("Previous Due Date:", previousDueDate)
+console.log("New Due Date:", newDueDate)
   // Add to extension history
   allotment.extensionHistory.push({
     extensionDate: new Date(),
@@ -219,7 +228,7 @@ const extendAllotment = asyncHandler(async (req, res) => {
 const returnAllotment = asyncHandler(async (req, res) => {
   const { returnDate, condition, returnNotes } = req.body
 
-  const allotment = await Allotment.findOne({ id: req.params.id })
+  const allotment = await Allotment.findOne({ _id: req.params.id })
 
   if (!allotment) {
     return res.status(404).json({

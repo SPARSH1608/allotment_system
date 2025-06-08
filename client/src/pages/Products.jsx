@@ -1,88 +1,65 @@
-
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
 import { Upload, Plus, Edit, Trash2, Laptop } from "lucide-react"
-import  AddProductModal  from "../components/add-product-modal"
+import AddProductModal from "../components/add-product-modal"
+import EditProductModal from "../components/edit-product-modal"
 import { Link } from "react-router-dom"
+import {
+  fetchProducts,
+  deleteProduct,
+  createProduct,
+  updateProduct,
+  clearError,
+} from "../store/slices/productSlice"
 
-const products = [
-  {
-    id: "LP001",
-    model: "ThinkPad E14",
-    brand: "Lenovo",
-    processor: "i5 8th Gen",
-    ram: "8GB RAM",
-    storage: "256GB SSD",
-    os: "Win10",
-    serialNumber: "LN123456789",
-    status: "Rented",
-    organization: "TechCorp Solutions",
-    baseRent: 3000,
-  },
-  {
-    id: "LP002",
-    model: "Inspiron 15",
-    brand: "Dell",
-    processor: "i7 10th Gen",
-    ram: "16GB RAM",
-    storage: "512GB SSD",
-    os: "Win11",
-    serialNumber: "DL987654321",
-    status: "Overdue",
-    organization: "DataSoft Inc",
-    baseRent: 4500,
-  },
-  {
-    id: "LP003",
-    model: "MacBook Air",
-    brand: "Apple",
-    processor: "M1 Chip",
-    ram: "8GB RAM",
-    storage: "256GB SSD",
-    os: "macOS",
-    serialNumber: "AP456789123",
-    status: "Available",
-    organization: "",
-    baseRent: 6000,
-  },
-  {
-    id: "LP004",
-    model: "Pavilion 14",
-    brand: "HP",
-    processor: "i5 11th Gen",
-    ram: "8GB RAM",
-    storage: "512GB SSD",
-    os: "Win11",
-    serialNumber: "HP789123456",
-    status: "Rented",
-    organization: "InnovateTech",
-    baseRent: 3500,
-  },
-  {
-    id: "LP005",
-    model: "VivoBook 15",
-    brand: "Asus",
-    processor: "Ryzen 5",
-    ram: "16GB RAM",
-    storage: "256GB SSD",
-    os: "Win10",
-    serialNumber: "AS321654987",
-    status: "Available",
-    organization: "",
-    baseRent: 2800,
-  },
-]
-
- const ProductsPage = () => {
+const ProductsPage = () => {
+  const dispatch = useDispatch()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editProductData, setEditProductData] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const { products, loading, error } = useSelector((state) => state.products)
+
+  useEffect(() => {
+    dispatch(fetchProducts())
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
+
+  // Add Product
+  const handleAddProduct = async (formData) => {
+    await dispatch(createProduct(formData))
+    setIsAddModalOpen(false)
+  }
+
+  // Edit Product
+  const handleEditProduct = (product) => {
+    setEditProductData(product)
+    setIsEditModalOpen(true)
+  }
+  const handleUpdateProduct = async (formData) => {
+    if (editProductData) {
+      await dispatch(updateProduct({ id: editProductData.id || editProductData._id, productData: formData }))
+      setIsEditModalOpen(false)
+      setEditProductData(null)
+    }
+  }
+
+  // Delete Product
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      dispatch(deleteProduct(id))
+    }
+  }
 
   const getStatusBadge = (status) => {
     switch (status) {
       case "Rented":
+      case "Allotted":
         return <Badge variant="success">{status}</Badge>
       case "Available":
         return <Badge variant="warning">{status}</Badge>
@@ -92,6 +69,33 @@ const products = [
         return <Badge>{status}</Badge>
     }
   }
+
+  // Filter products by search term (id, model, serialNumber)
+  const filteredProducts = products.filter((product) =>
+    [
+      product.id || product._id,
+      product.model,
+      product.serialNumber
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  )
+
+  // Count products by status
+  const totalProducts = products.length
+  const availableCount = products.filter(
+    (p) => (p.status || "").toLowerCase() === "available"
+  ).length
+  const rentedCount = products.filter(
+    (p) => {
+      const status = (p.status || "").toLowerCase()
+      return status === "rented" || status === "allotted"
+    }
+  ).length
+  const overdueCount = products.filter(
+    (p) => (p.status || "").toLowerCase() === "overdue"
+  ).length
 
   return (
     <div className="p-8">
@@ -121,7 +125,7 @@ const products = [
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Products</p>
-              <p className="text-2xl font-bold text-gray-900">247</p>
+              <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
             </div>
           </div>
         </div>
@@ -135,7 +139,7 @@ const products = [
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Currently Rented</p>
-              <p className="text-2xl font-bold text-gray-900">189</p>
+              <p className="text-2xl font-bold text-gray-900">{rentedCount}</p>
             </div>
           </div>
         </div>
@@ -149,7 +153,7 @@ const products = [
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Available</p>
-              <p className="text-2xl font-bold text-gray-900">58</p>
+              <p className="text-2xl font-bold text-gray-900">{availableCount}</p>
             </div>
           </div>
         </div>
@@ -163,7 +167,7 @@ const products = [
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-gray-900">12</p>
+              <p className="text-2xl font-bold text-gray-900">{overdueCount}</p>
             </div>
           </div>
         </div>
@@ -180,33 +184,12 @@ const products = [
               className="w-full"
             />
           </div>
-          <div className="flex gap-3">
-            <select className="px-3 py-2 border border-gray-300 rounded-md text-sm w-40">
-              <option>All Brands</option>
-              <option>Lenovo</option>
-              <option>Dell</option>
-              <option>Apple</option>
-              <option>HP</option>
-              <option>Asus</option>
-            </select>
-
-            <select className="px-3 py-2 border border-gray-300 rounded-md text-sm w-40">
-              <option>All Status</option>
-              <option>Available</option>
-              <option>Rented</option>
-              <option>Overdue</option>
-            </select>
-
-            <select className="px-3 py-2 border border-gray-300 rounded-md text-sm w-40">
-              <option>All Processors</option>
-              <option>Intel i5</option>
-              <option>Intel i7</option>
-              <option>AMD Ryzen</option>
-              <option>Apple M1</option>
-            </select>
-          </div>
         </div>
       </div>
+
+      {/* Error and Loading */}
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      {loading && <div className="text-gray-500 mb-4">Loading...</div>}
 
       {/* Products Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -221,7 +204,7 @@ const products = [
                   Model
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand
+                  Company
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Specifications
@@ -238,22 +221,22 @@ const products = [
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
+              {filteredProducts.map((product) => (
+                <tr key={product.id || product._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Link to={`/products/${product.id}`} className="text-blue-600 hover:text-blue-800 font-medium">
-                      {product.id}
+                    <Link to={`/products/${ product._id}`} className="text-blue-600 hover:text-blue-800 font-medium">
+                      {product.id || product._id}
                     </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.model}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.brand}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.company}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="space-y-1">
                       <div>
-                        {product.processor} • {product.ram}
+                        {product.processor} {product.processorGen && `• ${product.processorGen}`} • {product.ram}
                       </div>
                       <div>
-                        {product.storage} • {product.os}
+                        {product.ssd && `${product.ssd} SSD`} {product.hdd && product.hdd !== "None" && `• ${product.hdd} HDD`} • {product.windowsVersion}
                       </div>
                       <div className="text-xs text-gray-500">SN: {product.serialNumber}</div>
                     </div>
@@ -261,19 +244,38 @@ const products = [
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="space-y-1">
                       {getStatusBadge(product.status)}
-                      {product.organization && <div className="text-xs text-gray-500">{product.organization}</div>}
+                      {product.currentAllotmentId?.organizationId && (
+                        <div className="text-xs text-gray-500">
+                          Org: {product.currentAllotmentId.organizationId}
+                        </div>
+                      )}
+                      {product.currentAllotmentId?.location && (
+                        <div className="text-xs text-gray-500">
+                          Location: {product.currentAllotmentId.location}
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ₹{product.baseRent.toLocaleString()}
+                    ₹{product.baseRent?.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => handleEditProduct(product)}
+                      >
                         <Edit className="w-4 h-4" />
                         Edit
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-800"
+                        onClick={() => handleDelete( product._id)}
+                      >
                         <Trash2 className="w-4 h-4" />
                         Delete
                       </Button>
@@ -284,31 +286,29 @@ const products = [
             </tbody>
           </table>
         </div>
-
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-700">Showing 1 to 5 of 247 products</div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" className="bg-blue-600 text-white">
-              1
-            </Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <Button variant="outline" size="sm">
-              3
-            </Button>
-            <Button variant="outline" size="sm">
-              Next
-            </Button>
-          </div>
-        </div>
       </div>
 
-      <AddProductModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+      {/* Add Product Modal */}
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddProduct}
+      />
+
+      {/* Edit Product Modal */}
+      {isEditModalOpen && (
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setEditProductData(null)
+          }}
+          product={editProductData}
+          onSubmit={handleUpdateProduct}
+        />
+      )}
     </div>
   )
 }
-export default ProductsPage 
+
+export default ProductsPage

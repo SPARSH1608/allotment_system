@@ -79,7 +79,7 @@ const createSurrenderRecord = asyncHandler(async (req, res) => {
   const { allotmentId, condition, returnNotes, damageCharges = 0 } = req.body
 
   // Get the allotment
-  const allotment = await Allotment.findOne({ id: allotmentId })
+  const allotment = await Allotment.findOne({ _id: allotmentId })
   if (!allotment) {
     return res.status(404).json({
       success: false,
@@ -103,6 +103,7 @@ const createSurrenderRecord = asyncHandler(async (req, res) => {
   const daysUsed = Math.ceil((surrenderDate - allotment.handoverDate) / (1000 * 60 * 60 * 24))
   const totalRentPaid = (allotment.rentPer30Days / 30) * daysUsed
 
+  console.log(allotment, "surrenderDate:", surrenderDate, "daysUsed:", daysUsed, "totalRentPaid:", totalRentPaid)
   const surrenderRecord = await SurrenderRecord.create({
     id: surrenderId,
     laptopId: allotment.laptopId,
@@ -125,7 +126,7 @@ const createSurrenderRecord = asyncHandler(async (req, res) => {
 
   // Update laptop status
   await Product.findOneAndUpdate(
-    { id: allotment.laptopId },
+    { _id: allotment.laptopId },
     {
       status: condition === "Damaged" ? "Maintenance" : "Available",
       currentAllotmentId: null,
@@ -134,7 +135,7 @@ const createSurrenderRecord = asyncHandler(async (req, res) => {
 
   // Update organization stats
   await Organization.findOneAndUpdate(
-    { id: allotment.organizationId },
+    { _id: allotment.organizationId },
     {
       $inc: { activeAllotments: -1 },
     },

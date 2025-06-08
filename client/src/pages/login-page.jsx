@@ -1,20 +1,37 @@
-"use client"
-
-import { useState } from "react"
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Label } from "../components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { useAppDispatch, useAuthLoading, useIsAuthenticated, useAuth } from "../hooks/useRedux"
+import { loginUser, clearError } from "../store/slices/authSlice"
 
 export function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const dispatch = useAppDispatch()
+  const loading = useAuthLoading()
+  const isAuthenticated = useIsAuthenticated()
+  const { error } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/")
+    }
+  }, [isAuthenticated, navigate])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    console.log("Login:", { email, password })
+    dispatch(loginUser({ email, password }))
   }
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearError())
+    }
+  }, [dispatch])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -39,8 +56,9 @@ export function LoginPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full">
-              Sign In
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center">

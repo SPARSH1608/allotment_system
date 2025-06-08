@@ -18,7 +18,7 @@ const getOrganizations = asyncHandler(async (req, res) => {
   if (req.query.search) {
     filter.$or = [
       { name: { $regex: req.query.search, $options: "i" } },
-      { id: { $regex: req.query.search, $options: "i" } },
+      { _id: { $regex: req.query.search, $options: "i" } },
       { contactPerson: { $regex: req.query.search, $options: "i" } },
     ]
   }
@@ -68,7 +68,7 @@ const getOrganizations = asyncHandler(async (req, res) => {
 // @route   GET /api/organizations/:id
 // @access  Public
 const getOrganization = asyncHandler(async (req, res) => {
-  const organization = await Organization.findOne({ id: req.params.id })
+  const organization = await Organization.findOne({ _id: req.params.id })
 
   if (!organization) {
     return res.status(404).json({
@@ -126,7 +126,7 @@ const createOrganization = asyncHandler(async (req, res) => {
 // @route   PUT /api/organizations/:id
 // @access  Public
 const updateOrganization = asyncHandler(async (req, res) => {
-  let organization = await Organization.findOne({ id: req.params.id })
+  let organization = await Organization.findOne({ _id: req.params.id })
 
   if (!organization) {
     return res.status(404).json({
@@ -135,7 +135,7 @@ const updateOrganization = asyncHandler(async (req, res) => {
     })
   }
 
-  organization = await Organization.findOneAndUpdate({ id: req.params.id }, req.body, {
+  organization = await Organization.findOneAndUpdate({ _id: req.params.id }, req.body, {
     new: true,
     runValidators: true,
   })
@@ -150,7 +150,7 @@ const updateOrganization = asyncHandler(async (req, res) => {
 // @route   DELETE /api/organizations/:id
 // @access  Public
 const deleteOrganization = asyncHandler(async (req, res) => {
-  const organization = await Organization.findOne({ id: req.params.id })
+  const organization = await Organization.findOne({ _id: req.params.id })
 
   if (!organization) {
     return res.status(404).json({

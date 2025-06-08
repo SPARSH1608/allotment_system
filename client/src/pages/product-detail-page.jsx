@@ -1,85 +1,61 @@
 "use client"
 
-import { useState } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useParams, Link, useNavigate } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
 import { ArrowLeft, Edit, Trash2, Eye, FileText } from "lucide-react"
-import  EditProductModal from "../components/edit-product-modal"
-import  ExtendRentalModal  from "../components/extend-rental-modal"
-import  MarkReturnedModal  from "../components/mark-returned-modal"
-
-const productData = {
-  id: "LP001",
-  model: "ThinkPad E14",
-  brand: "Lenovo",
-  serialNumber: "LN123456789",
-  processor: "Intel i5 8th Generation",
-  memory: "8GB DDR4",
-  storage: "256GB SSD",
-  operatingSystem: "Windows 10 Pro",
-  baseRent: 3000,
-  status: "Currently Rented",
-  lastUpdated: "March 15, 2024",
-  currentAllotment: {
-    organization: "TechCorp Solutions",
-    location: "Noida, UP",
-    handoverDate: "Feb 15, 2024",
-    monthlyRent: 3000,
-    daysRemaining: 15,
-  },
-}
-
-const allotmentHistory = [
-  {
-    id: 1,
-    organization: "TechCorp Solutions",
-    location: "Noida, UP",
-    handoverDate: "Feb 15, 2024",
-    returnDate: "-",
-    duration: "28 days (ongoing)",
-    monthlyRent: 3000,
-    status: "Active",
-  },
-  {
-    id: 2,
-    organization: "DataSoft Inc",
-    location: "Gurgaon, HR",
-    handoverDate: "Nov 10, 2023",
-    returnDate: "Feb 10, 2024",
-    duration: "92 days",
-    monthlyRent: 2800,
-    status: "Completed",
-  },
-  {
-    id: 3,
-    organization: "InnovateTech",
-    location: "Delhi, DL",
-    handoverDate: "Aug 5, 2023",
-    returnDate: "Nov 5, 2023",
-    duration: "92 days",
-    monthlyRent: 3000,
-    status: "Completed",
-  },
-  {
-    id: 4,
-    organization: "StartupXYZ",
-    location: "Mumbai, MH",
-    handoverDate: "May 1, 2023",
-    returnDate: "Aug 10, 2023",
-    duration: "101 days",
-    monthlyRent: 2500,
-    status: "Was Overdue",
-  },
-]
+import EditProductModal from "../components/edit-product-modal"
+import ExtendRentalModal from "../components/extend-rental-modal"
+import MarkReturnedModal from "../components/mark-returned-modal"
+import { updateProduct, deleteProduct, fetchProductById } from "../store/slices/productSlice"
 
 const ProductDetailPage = () => {
   const { id } = useParams()
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [searchHistory, setSearchHistory] = useState("")
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false)
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
+
+  // Get product and history from Redux store
+  const { product, allotmentHistory } = useSelector((state) => state.products.currentProduct) || {}
+  const loading = useSelector((state) => state.products.loading)
+  const error = useSelector((state) => state.products.error)
+
+  // Find the current (active) allotment from history
+  const currentAllotment = (allotmentHistory || []).find((a) => a.status === "Active")
+
+  console.log("Product Detail Page Rendered", { product, allotmentHistory })
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchProductById(id))
+    }
+  }, [dispatch, id])
+
+  // Handle Edit
+  const handleUpdateProduct = async (formData) => {
+    await dispatch(updateProduct({ id: product.id || product._id, productData: formData }))
+    setIsEditModalOpen(false)
+  }
+
+  // Handle Delete
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      await dispatch(deleteProduct(product.id || product._id))
+      navigate("/products")
+    }
+  }
+
+  if (loading) return <div className="p-8">Loading...</div>
+  if (error) return <div className="p-8 text-red-500">{error}</div>
+  if (!product) return <div className="p-8">Product not found.</div>
+
+  // Helper for date formatting
+  const formatDate = (dateStr) => (dateStr ? new Date(dateStr).toLocaleDateString() : "-")
 
   return (
     <div className="p-8">
@@ -92,11 +68,11 @@ const ProductDetailPage = () => {
         </Link>
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-            <span>{productData.id}</span>
+            <span>{product.id}</span>
             <span>•</span>
-            <span>{productData.model}</span>
+            <span>{product.model}</span>
             <span>•</span>
-            <span>{productData.brand}</span>
+            <span>{product.company}</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Product Details</h1>
         </div>
@@ -108,9 +84,9 @@ const ProductDetailPage = () => {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{productData.model}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{product.model}</h2>
                 <p className="text-gray-600">
-                  {productData.brand} • Asset ID: {productData.id}
+                  {product.company} • Asset ID: {product.id}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -118,7 +94,12 @@ const ProductDetailPage = () => {
                   <Edit className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 hover:text-red-800"
+                  onClick={handleDelete}
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
                 </Button>
@@ -129,38 +110,43 @@ const ProductDetailPage = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Serial Number</p>
-                  <p className="text-gray-900">{productData.serialNumber}</p>
+                  <p className="text-gray-900">{product.serialNumber}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Processor</p>
-                  <p className="text-gray-900">{productData.processor}</p>
+                  <p className="text-gray-900">
+                    {product.processor} {product.processorGen && `• ${product.processorGen}`}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Memory (RAM)</p>
-                  <p className="text-gray-900">{productData.memory}</p>
+                  <p className="text-gray-900">{product.ram}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Storage</p>
-                  <p className="text-gray-900">{productData.storage}</p>
+                  <p className="text-gray-900">
+                    {product.ssd && `${product.ssd} SSD`}
+                    {product.hdd && product.hdd !== "None" && ` + ${product.hdd} HDD`}
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Operating System</p>
-                  <p className="text-gray-900">{productData.operatingSystem}</p>
+                  <p className="text-gray-900">{product.windowsVersion}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Base Rent</p>
-                  <p className="text-2xl font-bold text-green-600">₹{productData.baseRent.toLocaleString()} / month</p>
+                  <p className="text-2xl font-bold text-green-600">₹{product.baseRent?.toLocaleString()} / month</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Current Status</p>
-                  <Badge variant="success">{productData.status}</Badge>
+                  <Badge variant="success">{product.status}</Badge>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Last Updated</p>
-                  <p className="text-gray-900">{productData.lastUpdated}</p>
+                  <p className="text-gray-900">{formatDate(product.updatedAt)}</p>
                 </div>
               </div>
             </div>
@@ -171,36 +157,34 @@ const ProductDetailPage = () => {
         <div className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Allotment</h3>
-
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">Organization</p>
-                <p className="text-gray-900">{productData.currentAllotment.organization}</p>
+                <p className="text-gray-900">{currentAllotment?.organizationId?.name || "-"}</p>
               </div>
-
               <div>
                 <p className="text-sm font-medium text-gray-500">Location</p>
-                <p className="text-gray-900">{productData.currentAllotment.location}</p>
+                <p className="text-gray-900">
+                  {currentAllotment?.organizationId?.location || currentAllotment?.location || "-"}
+                </p>
               </div>
-
               <div>
                 <p className="text-sm font-medium text-gray-500">Handover Date</p>
-                <p className="text-gray-900">{productData.currentAllotment.handoverDate}</p>
+                <p className="text-gray-900">{formatDate(currentAllotment?.handoverDate)}</p>
               </div>
-
               <div>
                 <p className="text-sm font-medium text-gray-500">Monthly Rent</p>
                 <p className="text-lg font-bold text-green-600">
-                  ₹{productData.currentAllotment.monthlyRent.toLocaleString()}
+                  ₹{currentAllotment?.rentPer30Days?.toLocaleString() || "-"}
                 </p>
               </div>
-
               <div>
-                <p className="text-sm font-medium text-gray-500">Days Remaining</p>
-                <p className="text-gray-900">{productData.currentAllotment.daysRemaining} days</p>
+                <p className="text-sm font-medium text-gray-500">Status</p>
+                <Badge variant={currentAllotment?.status === "Active" ? "success" : "warning"}>
+                  {currentAllotment?.status || "-"}
+                </Badge>
               </div>
             </div>
-
             <div className="mt-6 space-y-3">
               <Button className="w-full" onClick={() => setIsExtendModalOpen(true)}>
                 Extend Rental
@@ -262,19 +246,27 @@ const ProductDetailPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {allotmentHistory.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
+                {(allotmentHistory || []).map((record) => (
+                  <tr key={record._id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 text-sm">
                       <div>
-                        <div className="font-medium text-gray-900">{record.organization}</div>
-                        <div className="text-gray-500">{record.location}</div>
+                        <div className="font-medium text-gray-900">{record.organizationId?.name || "-"}</div>
+                        <div className="text-gray-500">
+                          {record.organizationId?.location || record.location || "-"}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{record.handoverDate}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{record.returnDate}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{record.duration}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(record.handoverDate)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {record.surrenderDate ? formatDate(record.surrenderDate) : "-"}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {record.currentMonthDays || "-"}
+                    </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₹{record.monthlyRent.toLocaleString()}
+                      ₹{record.rentPer30Days?.toLocaleString() || "-"}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <Badge
@@ -303,29 +295,20 @@ const ProductDetailPage = () => {
             </table>
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm text-gray-700">Showing 1 to 4 of 8 records</div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" className="bg-blue-600 text-white">
-                1
-              </Button>
-              <Button variant="outline" size="sm">
-                2
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
-            </div>
-          </div>
+          {/* Pagination (static for now) */}
+       
         </div>
       </div>
-      <EditProductModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} product={productData} />
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        product={product}
+        onSubmit={handleUpdateProduct}
+      />
       <ExtendRentalModal isOpen={isExtendModalOpen} onClose={() => setIsExtendModalOpen(false)} />
       <MarkReturnedModal isOpen={isReturnModalOpen} onClose={() => setIsReturnModalOpen(false)} />
     </div>
   )
 }
+
 export default ProductDetailPage

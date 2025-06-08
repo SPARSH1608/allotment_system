@@ -1,6 +1,6 @@
 import React from 'react'
 import './App.css'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Register from './pages/Register'
 import { BrowserRouter as Router } from "react-router-dom"
 import ProductsPage from './pages/Products'
@@ -14,33 +14,108 @@ import SettingsPage from './pages/settings-page'
 import OrganizationDetailPage from './pages/organization-detail-page'
 import AddOrganizationPage from './pages/add-organization-page'
 import AllotmentsPage from './pages/allotment-page'
+import Home from './pages/Home'
+import { useIsAuthenticated } from './hooks/useRedux'
+
+function PrivateRoute({ children }) {
+  const isAuthenticated = useIsAuthenticated()
+  return isAuthenticated ? children : <Navigate to="/login" replace />
+}
 
 function App() {
+  const isAuthenticated = useIsAuthenticated()
 
   return (
     <Router>
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 ml-64">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          
-        
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/organizations" element={<OrganizationsPage />} />
-          <Route path="/organizations/detail" element={<OrganizationDetailPage />} />
-          <Route path="/organizations/add" element={<AddOrganizationPage />} />
-          <Route path="/allotments" element={<AllotmentsPage />} />
-          <Route path="/invoices" element={<InvoicesPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </main>
-    </div>
-  </Router>
+      <div className="flex min-h-screen bg-gray-50">
+        {isAuthenticated && <Sidebar />}
+        <main className={isAuthenticated ? "flex-1 ml-64" : "flex-1"}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/login"
+              element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />}
+            />
+            <Route
+              path="/register"
+              element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <ProductsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products/:id"
+              element={
+                <PrivateRoute>
+                  <ProductDetailPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/organizations"
+              element={
+                <PrivateRoute>
+                  <OrganizationsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/organizations/detail"
+              element={
+                <PrivateRoute>
+                  <OrganizationDetailPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/organizations/add"
+              element={
+                <PrivateRoute>
+                  <AddOrganizationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/allotments"
+              element={
+                <PrivateRoute>
+                  <AllotmentsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/invoices"
+              element={
+                <PrivateRoute>
+                  <InvoicesPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <PrivateRoute>
+                  <SettingsPage />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   )
 }
 

@@ -64,7 +64,7 @@ const login = asyncHandler(async (req, res) => {
 
   // Check if password matches
   const isMatch = await user.matchPassword(password)
-
+console.log("Password match result:", isMatch)
   if (!isMatch) {
     return res.status(401).json({
       success: false,
@@ -438,6 +438,7 @@ const getUserStats = asyncHandler(async (req, res) => {
 const sendTokenResponse = (user, statusCode, res) => {
   // Create token
   const token = user.getSignedJwtToken()
+  console.log("Generated JWT Token:", token)
 
   const options = {
     expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
