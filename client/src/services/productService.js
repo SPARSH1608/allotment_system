@@ -33,7 +33,7 @@ class ProductService {
 
   // Bulk upload products
   async bulkUpload(formData) {
-    return apiService.upload("/products/bulk-upload", formData)
+    return apiService.upload("/upload/products", formData)
   }
 
   // Search products

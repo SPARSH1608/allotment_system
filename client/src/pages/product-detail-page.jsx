@@ -6,20 +6,22 @@ import { useDispatch, useSelector } from "react-redux"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
-import { ArrowLeft, Edit, Trash2, Eye, FileText } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, Eye, FileText, Upload } from "lucide-react"
 import EditProductModal from "../components/edit-product-modal"
 import ExtendRentalModal from "../components/extend-rental-modal"
 import MarkReturnedModal from "../components/mark-returned-modal"
-import { updateProduct, deleteProduct, fetchProductById } from "../store/slices/productSlice"
+import BulkUploadModal from "../components/bulk-upload-modal"
+import { updateProduct, deleteProduct, fetchProductById, bulkUploadProducts } from "../store/slices/productSlice"
 
 const ProductDetailPage = () => {
   const { id } = useParams()
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
   const [searchHistory, setSearchHistory] = useState("")
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false)
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   // Get product and history from Redux store
   const { product, allotmentHistory } = useSelector((state) => state.products.currentProduct) || {}
@@ -48,6 +50,13 @@ const ProductDetailPage = () => {
       await dispatch(deleteProduct(product.id || product._id))
       navigate("/products")
     }
+  }
+
+  const handleBulkUpload = async (file) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    await dispatch(bulkUploadProducts(formData))
+    setIsBulkModalOpen(false)
   }
 
   if (loading) return <div className="p-8">Loading...</div>
@@ -102,6 +111,15 @@ const ProductDetailPage = () => {
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={() => setIsBulkModalOpen(true)}
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload XLSX
                 </Button>
               </div>
             </div>
@@ -307,6 +325,11 @@ const ProductDetailPage = () => {
       />
       <ExtendRentalModal isOpen={isExtendModalOpen} onClose={() => setIsExtendModalOpen(false)} />
       <MarkReturnedModal isOpen={isReturnModalOpen} onClose={() => setIsReturnModalOpen(false)} />
+      <BulkUploadModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        onUpload={handleBulkUpload}
+      />
     </div>
   )
 }

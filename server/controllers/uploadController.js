@@ -92,8 +92,7 @@ const uploadProducts = asyncHandler(async (req, res) => {
         const product = await Product.create(productData)
         results.success.push({
           row: i + 1,
-          id: product.id,
-          model: product.model,
+          product, 
         })
       } catch (error) {
         results.errors.push({

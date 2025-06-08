@@ -223,7 +223,10 @@ const productSlice = createSlice({
       })
       // Bulk upload
       .addCase(bulkUploadProducts.fulfilled, (state, action) => {
-        state.products = [...action.payload, ...state.products]
+        // action.payload.data.products is the array of new products
+        if (action.payload?.data?.products) {
+          state.products = [...action.payload.data.products, ...state.products]
+        }
       })
       .addCase(bulkUploadProducts.rejected, (state, action) => {
         state.error = action.payload

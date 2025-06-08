@@ -1,4 +1,3 @@
-
 import { useEffect } from "react"
 
 export function Modal({ isOpen, onClose, children, title }) {
@@ -19,7 +18,10 @@ export function Modal({ isOpen, onClose, children, title }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity z-[-1]"
+          onClick={onClose}
+        />
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 

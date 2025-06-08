@@ -65,7 +65,7 @@ const productSchema = new mongoose.Schema(
     },
     baseRent: {
       type: Number,
-      required: [true, "Base rent is required"],
+      default: 0,
       min: [0, "Base rent cannot be negative"],
     },
     status: {

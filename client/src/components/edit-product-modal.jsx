@@ -17,6 +17,7 @@ const EditProductModal = ({ isOpen, onClose, product, onSubmit }) => {
     hdd: "None",
     windowsVersion: "",
     baseRent: "",
+    status: "Available", // Add status to formData
   })
 
   useEffect(() => {
@@ -33,6 +34,7 @@ const EditProductModal = ({ isOpen, onClose, product, onSubmit }) => {
         hdd: product.hdd || "None",
         windowsVersion: product.windowsVersion || "",
         baseRent: product.baseRent || "",
+        status: product.status || "Available", // Set status from product
       })
     }
   }, [product])
@@ -52,7 +54,7 @@ const EditProductModal = ({ isOpen, onClose, product, onSubmit }) => {
       hdd: formData.hdd,
       windowsVersion: formData.windowsVersion,
       baseRent: Number(formData.baseRent),
-      status: product.status,
+      status: formData.status, // Use status from formData
       _id: product._id,
     }
     onSubmit(updatedProduct)
@@ -210,6 +212,21 @@ const EditProductModal = ({ isOpen, onClose, product, onSubmit }) => {
             onChange={(e) => handleInputChange("baseRent", e.target.value)}
             required
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <select
+            id="status"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            value={formData.status}
+            onChange={(e) => handleInputChange("status", e.target.value)}
+            required
+          >
+            <option value="Available">Available</option>
+            <option value="Allotted">Allotted</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Retired">Retired</option>
+          </select>
         </div>
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>

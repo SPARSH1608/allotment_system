@@ -6,6 +6,7 @@ import { Badge } from "../components/ui/badge"
 import { Upload, Plus, Edit, Trash2, Laptop } from "lucide-react"
 import AddProductModal from "../components/add-product-modal"
 import EditProductModal from "../components/edit-product-modal"
+import BulkUploadModal from "../components/bulk-upload-modal"
 import { Link } from "react-router-dom"
 import {
   fetchProducts,
@@ -13,6 +14,7 @@ import {
   createProduct,
   updateProduct,
   clearError,
+  bulkUploadProducts,
 } from "../store/slices/productSlice"
 
 const ProductsPage = () => {
@@ -21,8 +23,9 @@ const ProductsPage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editProductData, setEditProductData] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
   const { products, loading, error } = useSelector((state) => state.products)
-
+console.log(products)
   useEffect(() => {
     dispatch(fetchProducts())
     return () => {
@@ -43,7 +46,7 @@ const ProductsPage = () => {
   }
   const handleUpdateProduct = async (formData) => {
     if (editProductData) {
-      await dispatch(updateProduct({ id: editProductData.id || editProductData._id, productData: formData }))
+      await dispatch(updateProduct({ id: editProductData._id, productData: formData }))
       setIsEditModalOpen(false)
       setEditProductData(null)
     }
@@ -97,13 +100,25 @@ const ProductsPage = () => {
     (p) => (p.status || "").toLowerCase() === "overdue"
   ).length
 
+  // Bulk Upload
+  const handleBulkUpload = async (file) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    await dispatch(bulkUploadProducts(formData))
+    setIsBulkModalOpen(false)
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold text-gray-900">Products</h1>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => setIsBulkModalOpen(true)}
+            >
               <Upload className="w-4 h-4" />
               Upload XLSX
             </Button>
@@ -307,6 +322,13 @@ const ProductsPage = () => {
           onSubmit={handleUpdateProduct}
         />
       )}
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        onUpload={handleBulkUpload}
+      />
     </div>
   )
 }
