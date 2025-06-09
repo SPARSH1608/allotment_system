@@ -105,8 +105,16 @@ console.log("Laptop found:", laptop)
 
   // Generate allotment ID if not provided
   if (!req.body.id) {
-    const count = await Allotment.countDocuments()
-    req.body.id = `ALT${String(count + 1).padStart(4, "0")}`
+    // Find the latest allotment by id in descending order
+    const lastAllotment = await Allotment.findOne().sort({ createdAt: -1 }).select("id")
+    let nextNumber = 1
+    if (lastAllotment && lastAllotment.id) {
+      const match = lastAllotment.id.match(/^ALT(\d+)$/)
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1
+      }
+    }
+    req.body.id = `ALT${String(nextNumber).padStart(4, "0")}`
   }
 
   // Set default rent if not provided
@@ -185,10 +193,10 @@ const extendAllotment = asyncHandler(async (req, res) => {
     })
   }
 
-  if (allotment.status !== "Active") {
+  if (allotment.status === "Returned" || allotment.status === "Overdue") {
     return res.status(400).json({
       success: false,
-      message: "Can only extend active allotments",
+      message: "Can only extend active or extended allotments",
     })
   }
 

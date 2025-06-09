@@ -1,20 +1,49 @@
-
-import { useState } from "react"
+import { useState  }  from "react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Modal } from "./ui/modal"
-const ExtendRentalModal = ({ isOpen, onClose }) => {
+import { useAppDispatch } from "../hooks/useRedux"
+import { extendAllotment } from "../store/slices/allotmentSlice"
+import React from "react"
+const ExtendRentalModal = ({ isOpen, onClose, allotment }) => {
+  const dispatch = useAppDispatch()
   const [formData, setFormData] = useState({
     extensionPeriod: "30",
-    monthlyRent: "3000",
+    monthlyRent: allotment?.rentPer30Days?.toString() || "",
     notes: "",
   })
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  // Update monthlyRent if allotment changes
+  // (so modal works for different allotments without stale rent)
+  React.useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      monthlyRent: allotment?.rentPer30Days?.toString() || "",
+    }))
+  }, [allotment])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Rental extended:", formData)
-    onClose()
+    setLoading(true)
+    try {
+      await dispatch(
+        extendAllotment({
+          id: allotment._id,
+          extensionData: {
+            extensionDays: Number(formData.extensionPeriod),
+            newRent: Number(formData.monthlyRent),
+            notes: formData.notes,
+          },
+        })
+      ).unwrap()
+      onClose()
+    } catch (err) {
+      // Optionally show error
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleInputChange = (field, value) => {
@@ -62,7 +91,9 @@ const ExtendRentalModal = ({ isOpen, onClose }) => {
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Extend Rental</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Extending..." : "Extend Rental"}
+          </Button>
         </div>
       </form>
     </Modal>

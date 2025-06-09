@@ -1,21 +1,40 @@
-
-
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Modal } from "./ui/modal"
-const MarkReturnedModal = ({ isOpen, onClose }) => {
+import { useAppDispatch } from "../hooks/useRedux"
+import { returnAllotment } from "../store/slices/allotmentSlice"
+
+const MarkReturnedModal = ({ isOpen, onClose, allotment }) => {
+  const dispatch = useAppDispatch()
   const [formData, setFormData] = useState({
-    returnDate: "2025-06-03",
+    returnDate: new Date().toISOString().split("T")[0],
     condition: "Excellent",
     returnNotes: "",
   })
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Product marked as returned:", formData)
-    onClose()
+    setLoading(true)
+    try {
+      await dispatch(
+        returnAllotment({
+          id: allotment._id,
+          returnData: {
+            returnDate: new Date(formData.returnDate).toISOString(),
+            condition: formData.condition,
+            returnNotes: formData.returnNotes,
+          },
+        })
+      ).unwrap()
+      onClose()
+    } catch (err) {
+      // Optionally show error
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleInputChange = (field, value) => {
@@ -68,8 +87,8 @@ const MarkReturnedModal = ({ isOpen, onClose }) => {
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" className="bg-green-600 hover:bg-green-700">
-            Mark as Returned
+          <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading}>
+            {loading ? "Marking..." : "Mark as Returned"}
           </Button>
         </div>
       </form>

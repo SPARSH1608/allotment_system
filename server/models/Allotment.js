@@ -37,7 +37,7 @@ const allotmentSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Current month days is required"],
       min: [1, "Days must be at least 1"],
-      max: [31, "Days cannot exceed 31"],
+
       default: 30,
     },
    
