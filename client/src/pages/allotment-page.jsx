@@ -20,7 +20,10 @@ import  AllotmentStatsCard  from "../components/allotments/allotment-stats-card"
 import  OverdueAllotmentsTable from "../components/allotments/overdue-allotments-table"
 import  ExtendRentalModal  from "../components/extend-rental-modal"
 import  MarkReturnedModal  from "../components/mark-returned-modal"
-import { Search, Plus, Filter, Download, Eye } from "lucide-react"
+import { Search, Plus, Filter, Download, Eye, History, Upload } from "lucide-react"
+import { BulkAllotmentModal } from "../components/allotments/bulk-allotment-modal"
+import { Modal } from "../components/ui/modal"
+import { BulkUploadHistory } from "../components/allotments/bulk-upload-history"
 
 export function AllotmentsPage() {
   const dispatch = useAppDispatch()
@@ -29,8 +32,10 @@ console.log("Allotments:", allotments)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showExtendModal, setShowExtendModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
   const [selectedAllotment, setSelectedAllotment] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
 
   useEffect(() => {
     dispatch(fetchAllotments({ ...filters, page: 1 }))
@@ -90,6 +95,16 @@ console.log("Allotments:", allotments)
     return <Badge variant={config.variant}>{config.label}</Badge>
   }
 
+  const handleBulkUploadSuccess = () => {
+    setShowBulkModal(false)
+    dispatch(fetchAllotments({ ...filters, page: 1 }))
+  }
+
+  const handleExportSelected = () => {
+    // Implement export logic here (e.g., call an API or generate CSV)
+    alert("Export selected allotments: " + selectedAllotments.join(", "))
+  }
+
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
@@ -98,10 +113,20 @@ console.log("Allotments:", allotments)
           <h1 className="text-3xl font-bold text-gray-900">Allotments</h1>
           <p className="text-gray-600">Manage laptop allotments and track their status</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Allotment
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowHistoryModal(true)}>
+            <History className="w-4 h-4 mr-2" />
+            Upload History
+          </Button>
+          <Button variant="outline" onClick={() => setShowBulkModal(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
+          </Button>
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Allotment
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -142,9 +167,9 @@ console.log("Allotments:", allotments)
               <Filter className="w-4 h-4 mr-2" />
               Clear
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" size="sm" onClick={handleExportSelected}>
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export Selected
             </Button>
           </div>
         </div>
@@ -335,6 +360,23 @@ console.log("Allotments:", allotments)
           }}
           allotment={selectedAllotment}
         />
+      )}
+
+      <BulkAllotmentModal
+        isOpen={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        onSuccess={handleBulkUploadSuccess}
+      />
+
+      {showHistoryModal && (
+        <Modal
+          isOpen={showHistoryModal}
+          onClose={() => setShowHistoryModal(false)}
+          title="Bulk Upload History"
+          size="xl"
+        >
+          <BulkUploadHistory />
+        </Modal>
       )}
     </div>
   )

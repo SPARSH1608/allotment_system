@@ -23,11 +23,11 @@ const getOrganizations = asyncHandler(async (req, res) => {
     ]
   }
 
+  // Paginated organizations
   const organizations = await Organization.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit)
-
   const total = await Organization.countDocuments(filter)
 
-  // Get additional stats for each organization
+  // For each organization, attach stats
   const organizationsWithStats = await Promise.all(
     organizations.map(async (org) => {
       const activeAllotments = await Allotment.countDocuments({
@@ -47,9 +47,11 @@ const getOrganizations = asyncHandler(async (req, res) => {
 
       return {
         ...org.toObject(),
-        activeAllotments,
-        overdueAllotments,
-        totalRevenue: totalRevenue[0]?.total || 0,
+        stats: {
+          activeAllotments,
+          overdueAllotments,
+          totalRevenue: totalRevenue[0]?.total || 0,
+        },
       }
     }),
   )
@@ -63,7 +65,6 @@ const getOrganizations = asyncHandler(async (req, res) => {
     data: organizationsWithStats,
   })
 })
-
 // @desc    Get single organization
 // @route   GET /api/organizations/:id
 // @access  Public

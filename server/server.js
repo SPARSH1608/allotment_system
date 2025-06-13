@@ -13,7 +13,7 @@ const organizationRoutes = require("./routes/organizationRoutes")
 const allotmentRoutes = require("./routes/allotmentRoutes")
 const surrenderRoutes = require("./routes/surrenderRoutes")
 // const invoiceRoutes = require("./routes/invoiceRoutes")
-// const dashboardRoutes = require("./routes/dashboardRoutes")
+const dashboardRoutes = require("./routes/dashboardRoutes")
 const uploadRoutes = require("./routes/uploadRoutes")
 
 // // Import middleware
@@ -59,7 +59,7 @@ app.use("/api/organizations", organizationRoutes)
 app.use("/api/allotments", allotmentRoutes)
 app.use("/api/surrenders", surrenderRoutes)
 // app.use("/api/invoices", invoiceRoutes)
-// app.use("/api/dashboard", dashboardRoutes)
+app.use("/api/dashboard", dashboardRoutes)
 app.use("/api/upload", uploadRoutes)
 
 // Health check route

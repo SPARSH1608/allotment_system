@@ -97,16 +97,29 @@ const getRecentActivities = asyncHandler(async (req, res) => {
     .populate("organizationId", "name")
     .sort({ createdAt: -1 })
     .limit(5)
+    .lean();
 
-  // Get recent returns
+  // Get recent returns (manual lookup for laptop info since laptopId is a custom string)
   const recentReturns = await SurrenderRecord.find()
-    .populate("laptopId", "id model")
     .populate("organizationId", "name")
     .sort({ createdAt: -1 })
     .limit(5)
+    .lean();
+
+  // Attach laptop info manually for each return
+  for (const record of recentReturns) {
+    if (record.laptopId) {
+      // Find by custom id field
+      const product = await Product.findOne({ id: record.laptopId }, "id model");
+      record.laptop = product;
+    }
+  }
 
   // Get recent organizations
-  const recentOrganizations = await Organization.find().sort({ createdAt: -1 }).limit(3)
+  const recentOrganizations = await Organization.find()
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .lean();
 
   // Get overdue items
   const overdueItems = await Allotment.find({
@@ -117,27 +130,28 @@ const getRecentActivities = asyncHandler(async (req, res) => {
     .populate("organizationId", "name")
     .sort({ dueDate: 1 })
     .limit(5)
+    .lean();
 
   // Format activities
-  const activities = []
+  const activities = [];
 
   recentAllotments.forEach((allotment) => {
     activities.push({
       type: "allotment",
-      message: `Laptop ${allotment.laptopId.id} allotted to ${allotment.organizationId.name}`,
+      message: `Laptop ${allotment.laptopId?.id || allotment.laptopId} allotted to ${allotment.organizationId?.name || ""}`,
       timestamp: allotment.createdAt,
       status: "success",
-    })
-  })
+    });
+  });
 
   recentReturns.forEach((surrender) => {
     activities.push({
       type: "return",
-      message: `Laptop ${surrender.laptopId.id} returned by ${surrender.organizationId.name}`,
+      message: `Laptop ${surrender.laptop?.id || surrender.laptopId} returned by ${surrender.organizationId?.name || ""}`,
       timestamp: surrender.createdAt,
       status: "info",
-    })
-  })
+    });
+  });
 
   recentOrganizations.forEach((org) => {
     activities.push({
@@ -145,28 +159,28 @@ const getRecentActivities = asyncHandler(async (req, res) => {
       message: `New organization "${org.name}" added`,
       timestamp: org.createdAt,
       status: "success",
-    })
-  })
+    });
+  });
 
   overdueItems.forEach((overdue) => {
-    const daysOverdue = Math.ceil((new Date() - overdue.dueDate) / (1000 * 60 * 60 * 24))
+    const daysOverdue = Math.ceil((new Date() - overdue.dueDate) / (1000 * 60 * 60 * 24));
     activities.push({
       type: "overdue",
-      message: `Overdue alert: ${overdue.laptopId.id} at ${overdue.organizationId.name}`,
+      message: `Overdue alert: ${overdue.laptopId?.id || overdue.laptopId} at ${overdue.organizationId?.name || ""}`,
       timestamp: overdue.dueDate,
       status: "error",
       daysOverdue,
-    })
-  })
+    });
+  });
 
   // Sort by timestamp and limit
-  activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-  const limitedActivities = activities.slice(0, limit)
+  activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const limitedActivities = activities.slice(0, limit);
 
   res.status(200).json({
     success: true,
     data: limitedActivities,
-  })
+  });
 })
 
 // @desc    Get allotment trends
@@ -234,48 +248,115 @@ const getAllotmentTrends = asyncHandler(async (req, res) => {
 // @route   GET /api/dashboard/organization-distribution
 // @access  Public
 const getOrganizationDistribution = asyncHandler(async (req, res) => {
-  const distribution = await Allotment.aggregate([
+  // Step 1: Match only active/extended allotments
+  const matchedAllotments = await Allotment.aggregate([
     {
-      $match: { status: { $in: ["Active", "Extended"] } },
+      $match: { status: { $in: ["Active", "Extended"] } }
+    }
+  ])
+  console.log("Step 1 - Matched Allotments:", matchedAllotments.length)
+
+  // Step 2: Group by organizationId and sum laptopCount + revenue
+  const groupedData = await Allotment.aggregate([
+    {
+      $match: { status: { $in: ["Active", "Extended"] } }
     },
     {
       $group: {
         _id: "$organizationId",
         laptopCount: { $sum: 1 },
-        totalRevenue: { $sum: "$currentMonthRent" },
-      },
+        totalRevenue: { $sum: "$currentMonthRent" }
+      }
+    }
+  ])
+  console.log("Step 2 - Grouped by Org:", groupedData)
+
+  // Step 3: Lookup organization details
+  const withOrgDetails = await Allotment.aggregate([
+    {
+      $match: { status: { $in: ["Active", "Extended"] } }
+    },
+    {
+      $group: {
+        _id: "$organizationId",
+        laptopCount: { $sum: 1 },
+        totalRevenue: { $sum: "$currentMonthRent" }
+      }
+    },
+    {
+      $lookup: {
+        from: "organizations",        // Make sure this matches your Mongo collection name
+        localField: "_id",
+        foreignField: "id",           // Change to "_id" if needed
+        as: "organization"
+      }
+    }
+  ])
+  console.log("Step 3 - After $lookup:", withOrgDetails)
+
+  // Step 4: Unwind organization array
+  const unwound = await Allotment.aggregate([
+    {
+      $match: { status: { $in: ["Active", "Extended"] } }
+    },
+    {
+      $group: {
+        _id: "$organizationId",
+        laptopCount: { $sum: 1 },
+        totalRevenue: { $sum: "$currentMonthRent" }
+      }
     },
     {
       $lookup: {
         from: "organizations",
         localField: "_id",
         foreignField: "id",
-        as: "organization",
-      },
+        as: "organization"
+      }
+    },
+    { $unwind: "$organization" }
+  ])
+  console.log("Step 4 - After $unwind:", unwound)
+
+  // Final aggregation with projection and sorting
+  const distribution = await Allotment.aggregate([
+    {
+      $match: { status: { $in: ["Active", "Extended"] } }
     },
     {
-      $unwind: "$organization",
+      $group: {
+        _id: "$organizationId",
+        laptopCount: { $sum: 1 },
+        totalRevenue: { $sum: "$currentMonthRent" }
+      }
     },
+    {
+      $lookup: {
+        from: "organizations",
+        localField: "_id",
+        foreignField: "_id",
+        as: "organization"
+      }
+    },
+    { $unwind: "$organization" },
     {
       $project: {
         organizationName: "$organization.name",
         laptopCount: 1,
-        totalRevenue: 1,
-      },
+        totalRevenue: 1
+      }
     },
-    {
-      $sort: { laptopCount: -1 },
-    },
-    {
-      $limit: 10,
-    },
+    { $sort: { laptopCount: -1 } },
+    { $limit: 10 }
   ])
+  console.log("Final Output - Top 10 orgs:", distribution)
 
   res.status(200).json({
     success: true,
-    data: distribution,
+    data: distribution
   })
 })
+
 
 module.exports = {
   getDashboardStats,
