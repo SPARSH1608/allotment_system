@@ -125,6 +125,8 @@ export function BulkAllotmentModal({ isOpen, onClose, onSuccess }) {
       }
 
       sheet.rows.forEach((row, index) => {
+        // console.log(`Validating row ${index + 1} in sheet ${sheetName}`)
+        // console.log("Row data:", row)
         const allotment = transformRowToAllotment(row, sheet.mappings, sheet.organizationId)
         const errors = validateAllotmentData(allotment)
 
@@ -378,6 +380,7 @@ export function BulkAllotmentModal({ isOpen, onClose, onSuccess }) {
 
                     {/* Preview first 3 rows */}
                     <div className="overflow-x-auto">
+                      
                       <table className="min-w-full text-xs">
                         <thead>
                           <tr className="bg-gray-100">
@@ -389,15 +392,40 @@ export function BulkAllotmentModal({ isOpen, onClose, onSuccess }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {sheet.rows.slice(0, 3).map((row, index) => (
-                            <tr key={index} className="border-t">
-                              {row.map((cell, cellIndex) => (
-                                <td key={cellIndex} className="px-2 py-1 text-gray-600">
-                                  {cell || "-"}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
+                        {sheet.rows.slice(0, 3).map((row, index) => {
+  const allotment = transformRowToAllotment(row, sheet.mappings, sheet.organizationId);
+  return (
+    <tr key={index} className="border-t">
+      {sheet.headers.map((header, cellIndex) => {
+        // Find the mapped field for this header
+        const fieldKey = Object.keys(sheet.mappings).find(
+          (key) => sheet.mappings[key].header === header
+        );
+        // Use the transformed value if available, else fallback to raw cell
+        let displayValue = row[cellIndex];
+        // Try exact match
+        if (fieldKey && allotment[fieldKey] !== undefined) {
+          displayValue = allotment[fieldKey];
+        // Try camelCase match (for transformRowToAllotment output)
+        } else if (fieldKey) {
+          const camelKey = fieldKey
+            .toLowerCase()
+            .replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+          if (allotment[camelKey] !== undefined) {
+            displayValue = allotment[camelKey];
+          }
+        }
+          // const isDate = fieldKey && sheet.mappings[fieldKey].type === "date";
+          // console.log(`Field: ${fieldKey}, Value: ${displayValue}, Is Date: ${isDate}`);
+        return (
+          <td key={cellIndex} className="px-2 py-1 text-gray-600">
+            {displayValue || "-"}
+          </td>
+        );
+      })}
+    </tr>
+  );
+})}
                         </tbody>
                       </table>
                     </div>

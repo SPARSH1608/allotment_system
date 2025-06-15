@@ -174,7 +174,7 @@ export const FIELD_MAPPINGS = {
     const allotment = {
       organizationId: organizationId,
     }
-  
+  // console.log("Transforming row to allotment:", row, mappings, organizationId)
     // Map each field based on detected mappings
     Object.keys(mappings).forEach((field) => {
       const mapping = mappings[field]
@@ -200,9 +200,10 @@ export const FIELD_MAPPINGS = {
           case "HANDOVER_DATE":
             allotment.handoverDate = parseDate(value)
             break
-          case "RETURN_DATE":
-            allotment.expectedReturnDate = parseDate(value)
-            break
+            case "RETURN_DATE":
+              allotment.returnDate = parseDate(value);
+              allotment.expectedReturnDate = parseDate(value);
+              break;
           case "RENT":
             allotment.monthlyRent = Number.parseFloat(value) || 0
             break
@@ -266,20 +267,41 @@ export const FIELD_MAPPINGS = {
   // Parse date value
   function parseDate(value) {
     if (!value) return null
-  
+// console.log("Parsing date value:", value,typeof value)
+
     // Handle Excel date serial numbers
     if (typeof value === "number") {
       const excelEpoch = new Date(1900, 0, 1)
       const date = new Date(excelEpoch.getTime() + (value - 2) * 24 * 60 * 60 * 1000)
-      return date.toISOString().split("T")[0]
+      // Return as DD-MM-YYYY
+      const day = String(date.getDate()).padStart(2, "0")
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      const year = date.getFullYear()
+      // console.log("Parsed date from Excel serial:", date, `${day}-${month}-${year}`)
+      return `${day}-${month}-${year}`
     }
-  
-    // Handle string dates
-    const date = new Date(value)
-    if (!isNaN(date.getTime())) {
-      return date.toISOString().split("T")[0]
+
+    // Handle string dates in D-M-YYYY or DD-MM-YYYY format
+    if (typeof value === "string") {
+      // Match D-M-YYYY or DD-MM-YYYY
+      const dmY = /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/
+      const match = value.match(dmY)
+      if (match) {
+        const day = String(parseInt(match[1], 10)).padStart(2, "0")
+        const month = String(parseInt(match[2], 10)).padStart(2, "0")
+        const year = match[3]
+        return `${day}-${month}-${year}`
+      }
+      // Fallback to Date parsing
+      const date = new Date(value)
+      if (!isNaN(date.getTime())) {
+        const day = String(date.getDate()).padStart(2, "0")
+        const month = String(date.getMonth() + 1).padStart(2, "0")
+        const year = date.getFullYear()
+        return `${day}-${month}-${year}`
+      }
     }
-  
+
     return null
   }
   
@@ -315,4 +337,3 @@ export const FIELD_MAPPINGS = {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
   }
-  

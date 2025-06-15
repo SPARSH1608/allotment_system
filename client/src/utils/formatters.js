@@ -1,31 +1,31 @@
 // Date formatting utilities
 export const formatDate = (date) => {
-    if (!date) return "N/A"
-  
-    const d = new Date(date)
-    if (isNaN(d.getTime())) return "Invalid Date"
-  
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
-  
-  export const formatDateTime = (date) => {
-    if (!date) return "N/A"
-  
-    const d = new Date(date)
-    if (isNaN(d.getTime())) return "Invalid Date"
-  
-    return d.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
+  if (!date) return "N/A"
+  const d = new Date(date)
+  console.log("Formatted date:", d)
+  if (isNaN(d.getTime())) return "Invalid Date"
+  // Format: DD-MM-YYYY
+  const day = String(d.getDate()).padStart(2, "0")
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const year = d.getFullYear()
+  console.log("Formatted date:", `${day}-${month}-${year}`)
+  return `${day}-${month}-${year}`
+}
+
+export const formatDateTime = (date) => {
+  if (!date) return "N/A"
+  const d = new Date(date)
+  console.log("Formatted date:", d)
+  if (isNaN(d.getTime())) return "Invalid Date"
+  // Format: DD-MM-YYYY HH:mm
+  const day = String(d.getDate()).padStart(2, "0")
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const year = d.getFullYear()
+  const hour = String(d.getHours()).padStart(2, "0")
+  const minute = String(d.getMinutes()).padStart(2, "0")
+  console.log("Formatted date time:", `${day}-${month}-${year} ${hour}:${minute}`)
+  return `${day}-${month}-${year} ${hour}:${minute}`
+}
   
   // Currency formatting
   export const formatCurrency = (amount, currency = "USD") => {

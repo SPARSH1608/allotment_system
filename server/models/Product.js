@@ -30,7 +30,7 @@ const productSchema = new mongoose.Schema(
     processor: {
       type: String,
       required: [true, "Processor is required"],
-      enum: ["i3", "i5", "i7", "i9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "M1", "M2", "Other"],
+      enum: ["I3", "I5", "I7", "i9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "M1", "M2", "Other"],
       trim: true,
     },
     processorGen: {
@@ -60,7 +60,7 @@ const productSchema = new mongoose.Schema(
     windowsVersion: {
       type: String,
       required: [true, "Windows version is required"],
-      enum: ["Win10", "Win11", "macOS", "Ubuntu", "Other"],
+      enum: ["Win10", "Win11", "macOS", "Ubuntu", "Other","WIN10" ,"Mac OS"],
       trim: true,
     },
     baseRent: {

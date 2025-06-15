@@ -5,7 +5,7 @@ class AllotmentService {
   async getAllotments(params = {}) {
     const queryParams = {
       page: params.page || 1,
-      limit: params.limit || 10,
+      limit: params.limit || 40,
       status: params.status || "",
       organizationId: params.organizationId || "",
       productId: params.productId || "",

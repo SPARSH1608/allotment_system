@@ -10,19 +10,22 @@ const allotmentSchema = new mongoose.Schema(
       uppercase: true,
     },
     laptopId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: [true, "Laptop ID is required"],
       ref: "Product",
     },
     organizationId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: [true, "Organization ID is required"],
       ref: "Organization",
     },
     handoverDate: {
       type: Date,
       required: [true, "Handover date is required"],
-      default: Date.now,
+    },
+    dueDate: {
+      type: Date,
+      // not required, can be set from Excel/API
     },
     surrenderDate: {
       type: Date,
@@ -37,10 +40,12 @@ const allotmentSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Current month days is required"],
       min: [1, "Days must be at least 1"],
-
       default: 30,
     },
-   
+    currentMonthRent: {
+      type: Number,
+      min: [0, "Rent cannot be negative"],
+    },
     location: {
       type: String,
       required: [true, "Location is required"],
@@ -54,10 +59,6 @@ const allotmentSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true,
-    },
-    dueDate: {
-      type: Date,
-      required: true,
     },
     extensionHistory: [
       {
@@ -82,15 +83,7 @@ allotmentSchema.pre("save", function (next) {
   next()
 })
 
-// Calculate due date before saving
-allotmentSchema.pre("save", function (next) {
-  if (this.isNew || this.isModified("handoverDate") || this.isModified("currentMonthDays")) {
-    this.dueDate = new Date(this.handoverDate.getTime() + this.currentMonthDays * 24 * 60 * 60 * 1000)
-  }
-  next()
-})
-
-// Index for better performance
+// Indexes for performance
 allotmentSchema.index({ laptopId: 1 })
 allotmentSchema.index({ organizationId: 1 })
 allotmentSchema.index({ status: 1 })

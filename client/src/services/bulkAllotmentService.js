@@ -6,14 +6,10 @@ class BulkAllotmentService {
     const formData = new FormData()
     formData.append("file", file)
     formData.append("options", JSON.stringify(options))
-
-    return apiService.post("/allotments/bulk-upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
+    console.log("Uploading bulk allotments with options:", formData)
+    return apiService.post("/allotments/bulk-upload", options);
   }
-
+  
   // Preview bulk allotment data before processing
   async previewBulkAllotments(file) {
     const formData = new FormData()

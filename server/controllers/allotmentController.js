@@ -24,6 +24,7 @@ if (req.query.laptopId) {
   if (!product) {
     return res.status(404).json({ success: false, message: "Laptop not found" });
   }
+  console.log("Product found:", product)
   filter.laptopId = product._id;
 }
   const allotments = await Allotment.find(filter)
@@ -95,7 +96,7 @@ console.log("Laptop found:", laptop)
   }
 
   // Check if organization exists
-  const organization = await Organization.findOne({ _id: organizationId })
+  const organization = await Organization.findOne({ id: organizationId })
   if (!organization) {
     return res.status(404).json({
       success: false,

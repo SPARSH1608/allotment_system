@@ -10,18 +10,33 @@ const {
   getAllotmentStats,
 } = require("../controllers/allotmentController")
 
+const { protect, checkPermission } = require("../middleware/auth")
+
+// Import bulk routes
+const bulkRoutes = require("./bulkAllotmentRoutes")
+
 const router = express.Router()
 
-router.route("/").get(getAllotments).post(createAllotment)
+// Use bulk routes
+router.use("/", bulkRoutes)
 
-router.route("/stats").get(getAllotmentStats)
+// Regular allotment routes
+router
+  .route("/")
+  .get(protect, checkPermission("allotments", "read"), getAllotments)
+  .post(protect, checkPermission("allotments", "write"), createAllotment)
 
-router.route("/overdue").get(getOverdueAllotments)
+router.route("/stats").get(protect, checkPermission("allotments", "read"), getAllotmentStats)
 
-router.route("/:id").get(getAllotment).put(updateAllotment)
+router.route("/overdue").get(protect, checkPermission("allotments", "read"), getOverdueAllotments)
 
-router.route("/:id/extend").post(extendAllotment)
+router
+  .route("/:id")
+  .get(protect, checkPermission("allotments", "read"), getAllotment)
+  .put(protect, checkPermission("allotments", "write"), updateAllotment)
 
-router.route("/:id/return").post(returnAllotment)
+router.route("/:id/extend").post(protect, checkPermission("allotments", "write"), extendAllotment)
+
+router.route("/:id/return").post(protect, checkPermission("allotments", "write"), returnAllotment)
 
 module.exports = router
