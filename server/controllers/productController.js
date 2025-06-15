@@ -6,10 +6,7 @@ const asyncHandler = require("../middleware/asyncHandler")
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const page = Number.parseInt(req.query.page) || 1
-  const limit = Number.parseInt(req.query.limit) || 10
-  const skip = (page - 1) * limit
-
+ 
   // Build filter object
   const filter = {}
   if (req.query.status) filter.status = req.query.status
@@ -25,9 +22,8 @@ const getProducts = asyncHandler(async (req, res) => {
 
   const products = await Product.find(filter)
     .populate("currentAllotmentId", "organizationId location")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
+
+    
 
   const total = await Product.countDocuments(filter)
 
@@ -35,8 +31,7 @@ const getProducts = asyncHandler(async (req, res) => {
     success: true,
     count: products.length,
     total,
-    page,
-    pages: Math.ceil(total / limit),
+  
     data: products,
   })
 })
