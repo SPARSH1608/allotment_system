@@ -6,39 +6,187 @@ import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
 import { Download, Eye, Search, Plus, Upload, FileText } from "lucide-react"
 import  CreateInvoiceModal  from "../components/create-invoice-modal"
+import { InvoicePreview } from "../components/invoice-preview"
 
-const invoices = [
+const mockInvoices = [
   {
-    id: "INV-001",
-    organization: "TechCorp Solutions",
-    product: "ThinkPad E14",
-    amount: 3000,
-    dueDate: "2024-03-15",
+    invoiceNumber: "INV-2024-0001",
+    invoiceDate: "2024-03-15",
+    dueDate: "2024-04-14",
     status: "Paid",
-    issueDate: "2024-02-15",
+    companyDetails: {
+      name: "TechRent Solutions Pvt Ltd",
+      address: "123 Business Park, Tech City, State - 123456",
+      mobileNumber: "+91-9876543210",
+      gstin: "29ABCDE1234F1Z5",
+      bankDetails: {
+        bankName: "State Bank of India",
+        bankAddress: "Main Branch, Tech City",
+        accountNumber: "1234567890123456",
+        ifscCode: "SBIN0001234",
+      },
+    },
+    organizationDetails: {
+      name: "TechCorp Solutions",
+      address: "456 Tech Street, Innovation City, State - 560001",
+      contactPerson: "John Smith",
+      contactEmail: "john.smith@techcorp.com",
+      phoneNumber: "+91-9876543210",
+      gstin: "29ABCDE1234F2Z6",
+    },
+    items: [
+      {
+        productId: "LP001",
+        description: "Lenovo ThinkPad E14 - Intel i5 8GB RAM 256GB SSD",
+        quantity: 2,
+        rentDuration: 30,
+        ratePerDay: 100,
+        totalAmount: 6000,
+      },
+    ],
+    subtotal: 6000,
+    sgstRate: 9,
+    sgstAmount: 540,
+    cgstRate: 9,
+    cgstAmount: 540,
+    totalTaxAmount: 1080,
+    grandTotal: 7080,
+    grandTotalInWords: "Seven Thousand Eighty Rupees Only",
+    declarations: [
+      "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
+      "This is a computer generated invoice and does not require physical signature.",
+      "Subject to jurisdiction of courts in Tech City only.",
+      "Payment terms: Net 30 days from invoice date.",
+    ],
+    authorizedSignatory: {
+      name: "Authorized Signatory",
+      designation: "Manager",
+    },
   },
   {
-    id: "INV-002",
-    organization: "DataSoft Inc",
-    product: "Dell Inspiron 15",
-    amount: 4500,
-    dueDate: "2024-03-20",
-    status: "Pending",
-    issueDate: "2024-02-20",
-  },
-  {
-    id: "INV-003",
-    organization: "InnovateTech",
-    product: "HP Pavilion 14",
-    amount: 3500,
-    dueDate: "2024-03-10",
-    status: "Overdue",
-    issueDate: "2024-02-10",
+    invoiceNumber: "INV-2024-0002",
+    invoiceDate: "2024-03-20",
+    dueDate: "2024-04-19",
+    status: "Sent",
+    companyDetails: {
+      name: "TechRent Solutions Pvt Ltd",
+      address: "123 Business Park, Tech City, State - 123456",
+      mobileNumber: "+91-9876543210",
+      gstin: "29ABCDE1234F1Z5",
+      bankDetails: {
+        bankName: "State Bank of India",
+        bankAddress: "Main Branch, Tech City",
+        accountNumber: "1234567890123456",
+        ifscCode: "SBIN0001234",
+      },
+    },
+    organizationDetails: {
+      name: "DataSoft Inc",
+      address: "789 Data Avenue, Digital Park, State - 560002",
+      contactPerson: "Sarah Johnson",
+      contactEmail: "sarah.johnson@datasoft.com",
+      phoneNumber: "+91-9876543211",
+      gstin: "29ABCDE1234F3Z7",
+    },
+    items: [
+      {
+        productId: "LP002",
+        description: "Dell Inspiron 15 - Intel i7 16GB RAM 512GB SSD",
+        quantity: 1,
+        rentDuration: 45,
+        ratePerDay: 150,
+        totalAmount: 6750,
+      },
+    ],
+    subtotal: 6750,
+    sgstRate: 9,
+    sgstAmount: 607.5,
+    cgstRate: 9,
+    cgstAmount: 607.5,
+    totalTaxAmount: 1215,
+    grandTotal: 7965,
+    grandTotalInWords: "Seven Thousand Nine Hundred Sixty Five Rupees Only",
+    declarations: [
+      "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
+      "This is a computer generated invoice and does not require physical signature.",
+      "Subject to jurisdiction of courts in Tech City only.",
+      "Payment terms: Net 30 days from invoice date.",
+    ],
+    authorizedSignatory: {
+      name: "Authorized Signatory",
+      designation: "Manager",
+    },
   },
 ]
 
-const InvoicesPage = () => {
+export function InvoicesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+
+  const filteredInvoices = mockInvoices.filter((invoice) => {
+    const matchesSearch =
+      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.organizationDetails.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.organizationDetails.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesStatus = statusFilter === "all" || invoice.status.toLowerCase() === statusFilter.toLowerCase()
+
+    return matchesSearch && matchesStatus
+  })
+
+  const handleViewInvoice = (invoice) => {
+    setSelectedInvoice(invoice)
+    setIsPreviewOpen(true)
+  }
+
+  const handleEditInvoice = () => {
+    setIsPreviewOpen(false)
+    setIsCreateModalOpen(true)
+  }
+
+  const handleDownloadPDF = (invoice) => {
+    console.log("Downloading PDF for invoice:", invoice.invoiceNumber)
+    // Implement PDF download logic
+  }
+
+  const handleSendInvoice = (invoice) => {
+    console.log("Sending invoice:", invoice.invoiceNumber)
+    // Implement email sending logic
+  }
+
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+        return "success"
+      case "sent":
+        return "warning"
+      case "overdue":
+        return "error"
+      default:
+        return "secondary"
+    }
+  }
+
+  if (isPreviewOpen && selectedInvoice) {
+    return (
+      <div className="p-8">
+        <InvoicePreview
+          invoice={selectedInvoice}
+          onEdit={handleEditInvoice}
+          onDownload={() => handleDownloadPDF(selectedInvoice)}
+          onSend={() => handleSendInvoice(selectedInvoice)}
+        />
+        <div className="mt-6 text-center">
+          <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+            Back to Invoices
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8">
@@ -56,7 +204,7 @@ const InvoicesPage = () => {
             </Button>
           </div>
         </div>
-        <p className="text-gray-600">Manage billing and payment tracking</p>
+        <p className="text-gray-600">Manage billing and payment tracking with GST compliance</p>
       </div>
 
       {/* Stats Cards */}
@@ -68,7 +216,7 @@ const InvoicesPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">156</p>
+              <p className="text-2xl font-bold text-gray-900">{mockInvoices.length}</p>
             </div>
           </div>
         </div>
@@ -82,7 +230,9 @@ const InvoicesPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Paid</p>
-              <p className="text-2xl font-bold text-gray-900">142</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {mockInvoices.filter((inv) => inv.status === "Paid").length}
+              </p>
             </div>
           </div>
         </div>
@@ -95,8 +245,10 @@ const InvoicesPage = () => {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">9</p>
+              <p className="text-sm font-medium text-gray-600">Sent</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {mockInvoices.filter((inv) => inv.status === "Sent").length}
+              </p>
             </div>
           </div>
         </div>
@@ -110,7 +262,9 @@ const InvoicesPage = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-gray-900">5</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {mockInvoices.filter((inv) => inv.status === "Overdue").length}
+              </p>
             </div>
           </div>
         </div>
@@ -121,14 +275,24 @@ const InvoicesPage = () => {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input placeholder="Search invoices..." className="pl-10" />
+            <Input
+              placeholder="Search invoices..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <div className="flex gap-3">
-            <select className="px-3 py-2 border border-gray-300 rounded-md text-sm w-40">
-              <option>All Status</option>
-              <option>Paid</option>
-              <option>Pending</option>
-              <option>Overdue</option>
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm w-40"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="paid">Paid</option>
+              <option value="sent">Sent</option>
+              <option value="overdue">Overdue</option>
+              <option value="draft">Draft</option>
             </select>
           </div>
         </div>
@@ -141,13 +305,10 @@ const InvoicesPage = () => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Invoice ID
+                  Invoice Details
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Organization
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
@@ -164,33 +325,51 @@ const InvoicesPage = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {invoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{invoice.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.organization}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.product}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ₹{invoice.amount.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.dueDate}</td>
+              {filteredInvoices.map((invoice) => (
+                <tr key={invoice.invoiceNumber} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge
-                      variant={
-                        invoice.status === "Paid" ? "success" : invoice.status === "Pending" ? "warning" : "error"
-                      }
-                    >
-                      {invoice.status}
-                    </Badge>
+                    <div>
+                      <div className="text-sm font-medium text-blue-600">{invoice.invoiceNumber}</div>
+                      <div className="text-sm text-gray-500">
+                        {new Date(invoice.invoiceDate).toLocaleDateString("en-IN")}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{invoice.organizationDetails.name}</div>
+                      <div className="text-sm text-gray-500">{invoice.organizationDetails.contactPerson}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">₹{invoice.grandTotal.toLocaleString()}</div>
+                    <div className="text-xs text-gray-500">(incl. ₹{invoice.totalTaxAmount.toLocaleString()} tax)</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {new Date(invoice.dueDate).toLocaleDateString("en-IN")}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Badge variant={getStatusColor(invoice.status)}>{invoice.status}</Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => handleViewInvoice(invoice)}
+                      >
                         <Eye className="w-4 h-4 mr-1" />
                         View
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => handleDownloadPDF(invoice)}
+                      >
                         <Download className="w-4 h-4 mr-1" />
-                        Download
+                        PDF
                       </Button>
                     </div>
                   </td>

@@ -12,7 +12,6 @@ import OrganizationsPage from './pages/organizations-page'
 import InvoicesPage from './pages/invoice-page'
 import SettingsPage from './pages/settings-page'
 import OrganizationDetailPage from './pages/organization-detail-page'
-import AddOrganizationPage from './pages/add-organization-page'
 import AllotmentsPage from './pages/allotment-page'
 import Home from './pages/Home'
 import { useIsAuthenticated } from './hooks/useRedux'
@@ -73,18 +72,10 @@ function App() {
               }
             />
             <Route
-              path="/organizations/detail"
+              path="/organizations/:id"
               element={
                 <PrivateRoute>
                   <OrganizationDetailPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/organizations/add"
-              element={
-                <PrivateRoute>
-                  <AddOrganizationPage />
                 </PrivateRoute>
               }
             />

@@ -1,57 +1,33 @@
 "use client"
 
-import { useState } from "react"
-import { Link } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { useParams, Link } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchOrganizationById, clearCurrentOrganization } from "../store/slices/organizationSlice"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
 import { ArrowLeft, Edit, Upload, Plus } from "lucide-react"
 
-const organizationData = {
-  name: "TechCorp Solutions",
-  location: "Noida, UP",
-  totalLaptops: 45,
-  activeLaptops: 42,
-  overdue: 3,
-  contactPerson: "Rajesh Kumar",
-  email: "rajesh@techcorp.com",
-  phone: "+91 98765 43210",
-  totalRevenue: 135000,
-}
-
-const laptops = [
-  {
-    id: "LP001",
-    model: "ThinkPad E14",
-    brand: "Lenovo",
-    specs: "i5 8th Gen • 8GB RAM\n256GB SSD • Win10",
-    status: "Allotted",
-    daysLeft: 15,
-    monthlyRent: 3000,
-  },
-  {
-    id: "LP002",
-    model: "Inspiron 15",
-    brand: "Dell",
-    specs: "i7 10th Gen • 16GB RAM\n512GB SSD • Win11",
-    status: "Overdue",
-    daysOverdue: 5,
-    monthlyRent: 4500,
-  },
-  {
-    id: "LP003",
-    model: "MacBook Air",
-    brand: "Apple",
-    specs: "M1 Chip • 8GB RAM\n256GB SSD • macOS",
-    status: "Available",
-    monthlyRent: 6000,
-  },
-]
-
 const OrganizationDetailPage = () => {
+  const { id } = useParams()
+  const dispatch = useDispatch()
+  const { currentOrganization, loading, error } = useSelector(state => state.organizations)
   const [searchLaptops, setSearchLaptops] = useState("")
   const [activeTab, setActiveTab] = useState("All")
+console.log("Current Organization:", currentOrganization)
+  useEffect(() => {
+    dispatch(fetchOrganizationById(id))
+    return () => dispatch(clearCurrentOrganization())
+  }, [dispatch, id])
 
+  if (loading) return <div>Loading...</div>
+  if (error) return <div className="text-red-500">{error}</div>
+  if (!currentOrganization) return null
+
+  const { organization, allotments, stats } = currentOrganization
+console.log("Organization Data:", organization)
+console.log("Allotments Data:", allotments)
   const getStatusBadge = (laptop) => {
     switch (laptop.status) {
       case "Allotted":
@@ -85,9 +61,9 @@ const OrganizationDetailPage = () => {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">{organizationData.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{organization.name}</h1>
           <p className="text-gray-600">
-            {organizationData.location} • {organizationData.totalLaptops} Laptops • {organizationData.overdue} Overdue
+            {organization.location} • {stats?.totalLaptops} Laptops • {stats?.overdueLaptops} Overdue
           </p>
         </div>
         <div className="flex gap-2">
@@ -106,19 +82,20 @@ const OrganizationDetailPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="text-sm font-medium text-gray-500">Contact Person</div>
-          <div className="text-lg font-semibold text-gray-900">{organizationData.contactPerson}</div>
+          <div className="text-lg font-semibold text-gray-900">{organization.contactPerson}</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="text-sm font-medium text-gray-500">Email</div>
-          <div className="text-lg font-semibold text-gray-900">{organizationData.email}</div>
+          <div className="text-lg font-semibold text-gray-900">{organization.contactEmail}</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="text-sm font-medium text-gray-500">Phone</div>
-          <div className="text-lg font-semibold text-gray-900">{organizationData.phone}</div>
+          <div className="te
+          xt-sm font-medium text-gray-500">Phone</div>
+          <div className="text-lg font-semibold text-gray-900">{organization.contactPhone}</div>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="text-sm font-medium text-gray-500">Total Revenue</div>
-          <div className="text-lg font-semibold text-green-600">₹{organizationData.totalRevenue.toLocaleString()}</div>
+          <div className="text-lg font-semibold text-green-600">₹{stats.totalRevenue && !isNaN(stats.totalRevenue) ? stats.totalRevenue.toLocaleString() : "0"}</div>
         </div>
       </div>
 
@@ -137,10 +114,10 @@ const OrganizationDetailPage = () => {
                 >
                   {tab} (
                   {tab === "All"
-                    ? organizationData.totalLaptops
+                    ? stats.totalLaptops
                     : tab === "Allotted"
-                      ? organizationData.activeLaptops
-                      : organizationData.totalLaptops - organizationData.activeLaptops}
+                      ? stats.activeLaptops
+                      : stats.totalLaptops - stats.activeLaptops}
                   )
                 </button>
               ))}
@@ -167,93 +144,65 @@ const OrganizationDetailPage = () => {
         </div>
 
         {/* Laptops Table */}
+        <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-semibold mb-4">Allotments</h2>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input type="checkbox" className="h-4 w-4 text-blue-600 rounded" />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Asset ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Model
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Specs
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Monthly Rent
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+          <table className="min-w-full border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-3 py-2 border">Allotment ID</th>
+                <th className="px-3 py-2 border">Laptop ID</th>
+                <th className="px-3 py-2 border">Model</th>
+                <th className="px-3 py-2 border">Company</th>
+                <th className="px-3 py-2 border">Processor</th>
+                <th className="px-3 py-2 border">RAM</th>
+                <th className="px-3 py-2 border">SSD</th>
+                <th className="px-3 py-2 border">Windows/Mac</th>
+                <th className="px-3 py-2 border">Base Rent</th>
+                <th className="px-3 py-2 border">Handover Date</th>
+                <th className="px-3 py-2 border">Surrender Date</th>
+                <th className="px-3 py-2 border">Status</th>
+                <th className="px-3 py-2 border">Current Month Rent</th>
+                <th className="px-3 py-2 border">Location</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {laptops.map((laptop) => (
-                <tr key={laptop.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input type="checkbox" className="h-4 w-4 text-blue-600 rounded" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{laptop.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{laptop.model}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{laptop.brand}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    <div className="whitespace-pre-line">{laptop.specs}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-1">
-                      {getStatusBadge(laptop)}
-                      {getStatusDetails(laptop)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ₹{laptop.monthlyRent.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
-                        Edit
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
-                        Rent
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
-                        Delete
-                      </Button>
-                    </div>
+            <tbody>
+              {allotments && allotments.length > 0 ? (
+                allotments.map((allotment) => (
+                  <tr key={allotment._id} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 border font-mono">{allotment.id}</td>
+                    <td className="px-3 py-2 border font-mono">{allotment.laptopId?.id}</td>
+                    <td className="px-3 py-2 border">{allotment.laptopId?.model}</td>
+                    <td className="px-3 py-2 border">{allotment.laptopId?.company}</td>
+                    <td className="px-3 py-2 border">{allotment.laptopId?.processor}</td>
+                    <td className="px-3 py-2 border">{allotment.laptopId?.ram}</td>
+                    <td className="px-3 py-2 border">{allotment.laptopId?.ssd}</td>
+                    <td className="px-3 py-2 border">{allotment.laptopId?.windowsVersion}</td>
+                    <td className="px-3 py-2 border">₹{allotment.laptopId?.baseRent}</td>
+                    <td className="px-3 py-2 border">{allotment.handoverDate ? new Date(allotment.handoverDate).toLocaleDateString() : "-"}</td>
+                    <td className="px-3 py-2 border">{allotment.surrenderDate ? new Date(allotment.surrenderDate).toLocaleDateString() : "-"}</td>
+                    <td className="px-3 py-2 border">
+                      <Badge variant={allotment.status === "Active" ? "success" : "secondary"}>
+                        {allotment.status}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2 border">₹{allotment.rentPer30Days ?? "-"}</td>
+                    <td className="px-3 py-2 border">{allotment.location}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={14} className="text-center py-4 text-gray-500">
+                    No allotments found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
+      </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-700">Showing 1 to 3 of 45 laptops</div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" className="bg-blue-600 text-white">
-              1
-            </Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <Button variant="outline" size="sm">
-              Next
-            </Button>
-          </div>
-        </div>
+    
       </div>
     </div>
   )

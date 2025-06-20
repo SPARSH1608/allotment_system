@@ -557,11 +557,7 @@ console.log("Starting bulk allotment processing..." ,uploadData)
         surrenderDate: surrenderDateValue || undefined,
         rentPer30Days: data.monthlyRent || data.RENT_PER_30_DAYS || laptop.baseRent,
         currentMonthDays: data.currentMonthDays || data.CURRENT_MONTH_DAYS || 30,
-        currentMonthRent:
-          data.currentMonthRent ||
-          data.CURRENT_MONTH_RENT ||
-          ((data.monthlyRent || data.RENT_PER_30_DAYS || laptop.baseRent) / 30) *
-            (data.currentMonthDays || data.CURRENT_MONTH_DAYS || 30),
+  
         location: data.location || data.LOCATION || "Not specified",
         status,
         notes: data.notes || data.NOTES || "",
@@ -590,7 +586,7 @@ console.log("Starting bulk allotment processing..." ,uploadData)
 
       results.successfulRecords++
       results.summary.laptopsAllotted++
-      results.summary.totalRentValue += allotmentData.currentMonthRent
+      results.summary.totalRentValue += allotmentData.rentPer30Days
     } catch (error) {
       results.failedRecords++
       results.errors.push({

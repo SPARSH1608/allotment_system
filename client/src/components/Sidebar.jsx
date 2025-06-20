@@ -6,10 +6,7 @@ import { logoutUser } from "../store/slices/authSlice"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, auth: true },
   { name: "Organizations", href: "/organizations", icon: Building2, auth: true },
-  { name: "Organization Detail", href: "/organizations/detail", icon: Building2, auth: true },
-  { name: "Add Organization", href: "/organizations/add", icon: Plus, auth: true },
   { name: "Products", href: "/products", icon: Laptop, auth: true },
-
   { name: "Allotments", href: "/allotments", icon: FileText, auth: true },
   { name: "Invoices", href: "/invoices", icon: FileText, auth: true },
   { name: "Settings", href: "/settings", icon: Settings, auth: true },

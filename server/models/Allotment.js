@@ -42,10 +42,7 @@ const allotmentSchema = new mongoose.Schema(
       min: [1, "Days must be at least 1"],
       default: 30,
     },
-    currentMonthRent: {
-      type: Number,
-      min: [0, "Rent cannot be negative"],
-    },
+  
     location: {
       type: String,
       required: [true, "Location is required"],
@@ -76,12 +73,7 @@ const allotmentSchema = new mongoose.Schema(
 )
 
 // Calculate current month rent before saving
-allotmentSchema.pre("save", function (next) {
-  if (this.isModified("rentPer30Days") || this.isModified("currentMonthDays")) {
-    this.currentMonthRent = (this.rentPer30Days / 30) * this.currentMonthDays
-  }
-  next()
-})
+
 
 // Indexes for performance
 allotmentSchema.index({ laptopId: 1 })

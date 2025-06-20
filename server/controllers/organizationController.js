@@ -8,7 +8,7 @@ const asyncHandler = require("../middleware/asyncHandler")
 // @access  Public
 const getOrganizations = asyncHandler(async (req, res) => {
   const page = Number.parseInt(req.query.page) || 1
-  const limit = Number.parseInt(req.query.limit) || 10
+  const limit = Number.parseInt(req.query.limit) || 100
   const skip = (page - 1) * limit
 
   // Build filter object
@@ -31,12 +31,12 @@ const getOrganizations = asyncHandler(async (req, res) => {
   const organizationsWithStats = await Promise.all(
     organizations.map(async (org) => {
       const activeAllotments = await Allotment.countDocuments({
-        organizationId: org.id,
+        organizationId: org._id,
         status: "Active",
       })
 
       const overdueAllotments = await Allotment.countDocuments({
-        organizationId: org.id,
+        organizationId: org._id,
         status: "Overdue",
       })
 

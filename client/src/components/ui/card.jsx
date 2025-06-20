@@ -1,16 +1,30 @@
-export function Card({ children, className = "" }) {
-    return <div className={`bg-white overflow-hidden shadow rounded-lg ${className}`}>{children}</div>
-  }
-  
-  export function CardHeader({ children, className = "" }) {
-    return <div className={`px-4 py-5 sm:px-6 ${className}`}>{children}</div>
-  }
-  
-  export function CardTitle({ children, className = "" }) {
-    return <h3 className={`text-lg leading-6 font-medium text-gray-900 ${className}`}>{children}</h3>
-  }
-  
-  export function CardContent({ children, className = "" }) {
-    return <div className={`px-4 py-5 sm:p-6 ${className}`}>{children}</div>
-  }
-  
+import React from "react";
+
+export const Card = ({ children, onClick, className = "", ...props }) => (
+  <div
+    className={`rounded-lg shadow bg-white ${className}`}
+    onClick={onClick}
+    {...props}
+    style={{ cursor: onClick ? "pointer" : undefined, ...props.style }}
+  >
+    {children}
+  </div>
+);
+
+export const CardHeader = ({ children, className = "", ...props }) => (
+  <div className={`p-4 border-b ${className}`} {...props}>
+    {children}
+  </div>
+);
+
+export const CardContent = ({ children, className = "", ...props }) => (
+  <div className={`p-4 ${className}`} {...props}>
+    {children}
+  </div>
+);
+
+export const CardTitle = ({ children, className = "", ...props }) => (
+  <h2 className={`text-xl font-semibold ${className}`} {...props}>
+    {children}
+  </h2>
+);
