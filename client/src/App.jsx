@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './App.css'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Register from './pages/Register'
@@ -23,12 +23,15 @@ function PrivateRoute({ children }) {
 
 function App() {
   const isAuthenticated = useIsAuthenticated()
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
     <Router>
       <div className="flex min-h-screen bg-gray-50">
-        {isAuthenticated && <Sidebar />}
-        <main className={isAuthenticated ? "flex-1 ml-64" : "flex-1"}>
+        {isAuthenticated && (
+          <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        )}
+        <div className={`main-content ${collapsed ? "collapsed" : "expanded"} flex-1`}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -104,7 +107,7 @@ function App() {
               }
             />
           </Routes>
-        </main>
+        </div>
       </div>
     </Router>
   )

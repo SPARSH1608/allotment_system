@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useDispatch } from "react-redux"
 import { createInvoice, fetchInvoices } from "../store/slices/invoiceSlice"
 import { Button } from "./ui/button"
@@ -27,7 +27,7 @@ const defaultCompanyDetails = {
   },
 }
 
-export function CreateInvoiceModal({ isOpen, onClose }) {
+export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
   const dispatch = useDispatch()
   const [currentStep, setCurrentStep] = useState(1)
   const [productSearchTerm, setProductSearchTerm] = useState("")
@@ -114,14 +114,9 @@ export function CreateInvoiceModal({ isOpen, onClose }) {
   }, [formData.companyDetails])
 
   const calculateTotals = () => {
+    // Subtotal is now just quantity * ratePerDay for each product (no date calculation)
     const subtotal = formData.selectedProducts.reduce((sum, product) => {
-      if (product.startDate && product.endDate) {
-        const start = new Date(product.startDate)
-        const end = new Date(product.endDate)
-        const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1)
-        return sum + product.quantity * product.ratePerDay * days
-      }
-      return sum
+      return sum + (product.quantity * product.ratePerDay)
     }, 0)
 
     const sgstAmount = (subtotal * formData.sgstRate) / 100
@@ -277,6 +272,57 @@ export function CreateInvoiceModal({ isOpen, onClose }) {
       })
     }
   }, [formData.companyDetails])
+
+  // Prefill organization and products when modal opens
+  useEffect(() => {
+    if (isOpen && invoice) {
+      setFormData({
+        organizationId: invoice.organizationDetails?.id || "",
+        invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split("T")[0] : "",
+        dueDate: invoice.dueDate ? invoice.dueDate.split("T")[0] : "",
+        selectedProducts: invoice.items
+          ? invoice.items.map(item => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              startDate: item.startDate ? item.startDate.split("T")[0] : "",
+              endDate: item.endDate ? item.endDate.split("T")[0] : "",
+              ratePerDay: item.ratePerDay,
+            }))
+          : [],
+        sgstRate: invoice.sgstRate ?? 9,
+        cgstRate: invoice.cgstRate ?? 9,
+        notes: invoice.notes || "",
+        companyDetails: invoice.companyDetails || defaultCompanyDetails,
+      })
+      setBankDetails(invoice.companyDetails?.bankDetails || {
+        bankName: "",
+        bankAddress: "",
+        accountNumber: "",
+        ifscCode: "",
+      })
+      setCurrentStep(1)
+    }
+    // If creating new, reset form
+    if (isOpen && !invoice) {
+      setFormData({
+        organizationId: "",
+        invoiceDate: new Date().toISOString().split("T")[0],
+        dueDate: "",
+        selectedProducts: [],
+        sgstRate: 9,
+        cgstRate: 9,
+        notes: "",
+        companyDetails: defaultCompanyDetails,
+      })
+      setBankDetails({
+        bankName: "",
+        bankAddress: "",
+        accountNumber: "",
+        ifscCode: "",
+      })
+      setCurrentStep(1)
+    }
+  }, [isOpen, invoice])
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -452,7 +498,7 @@ export function CreateInvoiceModal({ isOpen, onClose }) {
                           <div className="font-medium text-gray-900"> {prod.model}</div>
                           <div className="text-xs text-gray-500">{prod.id} • {prod.processor} • {prod.ram}GB RAM • {prod.ssd}GB SSD</div>
                         </div>
-                        <Badge variant="outline">₹{prod.rentPerDay}/day</Badge>
+                        <Badge variant="outline">₹{prod.baseRent}/month</Badge>
                       </div>
                     ))}
                   </div>
@@ -556,16 +602,7 @@ export function CreateInvoiceModal({ isOpen, onClose }) {
                         <Label className="text-sm font-medium text-gray-700">Total Amount</Label>
                         <div className="flex items-center h-10 px-3 bg-gray-50 border border-gray-200 rounded-md">
                           <span className="font-semibold text-green-700">
-                            ₹{(() => {
-                              // Calculate days between startDate and endDate (inclusive)
-                              if (product.startDate && product.endDate) {
-                                const start = new Date(product.startDate)
-                                const end = new Date(product.endDate)
-                                const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1)
-                                return (product.quantity * product.ratePerDay * days).toLocaleString()
-                              }
-                              return "0"
-                            })()}
+                            ₹{(product.quantity * product.ratePerDay).toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -815,15 +852,7 @@ export function CreateInvoiceModal({ isOpen, onClose }) {
                             <td className="text-right p-3">{product.endDate}</td>
                             <td className="text-right p-3">₹{product.ratePerDay}</td>
                             <td className="text-right p-3 font-medium">
-                              ₹{(() => {
-                                if (product.startDate && product.endDate) {
-                                  const start = new Date(product.startDate)
-                                  const end = new Date(product.endDate)
-                                  const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1)
-                                  return (product.quantity * product.ratePerDay * days).toLocaleString()
-                                }
-                                return "0"
-                              })()}
+                              ₹{(product.quantity * product.ratePerDay).toLocaleString()}
                             </td>
                           </tr>
                         )
@@ -940,15 +969,7 @@ export function CreateInvoiceModal({ isOpen, onClose }) {
               startDate: p.startDate,
               endDate: p.endDate,
               ratePerDay: p.ratePerDay,
-              totalAmount: (() => {
-                if (p.startDate && p.endDate) {
-                  const start = new Date(p.startDate)
-                  const end = new Date(p.endDate)
-                  const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1)
-                  return p.quantity * p.ratePerDay * days
-                }
-                return 0
-              })(),
+              totalAmount: p.quantity * p.ratePerDay,
             })),
             subtotal: calculations.subtotal,
             sgstRate: formData.sgstRate,

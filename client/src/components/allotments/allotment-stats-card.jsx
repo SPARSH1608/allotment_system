@@ -36,27 +36,27 @@ export function AllotmentStatsCard({ period = "month" }) {
       color: "text-red-600",
       bgColor: "bg-red-50",
     },
-    {
-      title: "Monthly Revenue",
-      value: `₹${(stats.monthlyRevenue || 0).toLocaleString()}`,
-      icon: DollarSign,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-    },
-    {
-      title: "Total Revenue",
-      value: `₹${(stats.totalRevenue || 0).toLocaleString()}`,
-      icon: TrendingUp,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
-    },
-    {
-      title: "Average Rent",
-      value: `₹${(stats.averageRent || 0).toLocaleString()}`,
-      icon: TrendingDown,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-    },
+    // {
+    //   title: "Monthly Revenue",
+    //   value: `₹${(stats.monthlyRevenue || 0).toLocaleString()}`,
+    //   icon: DollarSign,
+    //   color: "text-purple-600",
+    //   bgColor: "bg-purple-50",
+    // },
+    // {
+    //   title: "Total Revenue",
+    //   value: `₹${(stats.totalRevenue || 0).toLocaleString()}`,
+    //   icon: TrendingUp,
+    //   color: "text-indigo-600",
+    //   bgColor: "bg-indigo-50",
+    // },
+    // {
+    //   title: "Average Rent",
+    //   value: `₹${(stats.averageRent || 0).toLocaleString()}`,
+    //   icon: TrendingDown,
+    //   color: "text-orange-600",
+    //   bgColor: "bg-orange-50",
+    // },
   ]
 
   if (loading) {

@@ -36,12 +36,7 @@ const allotmentSchema = new mongoose.Schema(
       required: [true, "Rent per 30 days is required"],
       min: [0, "Rent cannot be negative"],
     },
-    currentMonthDays: {
-      type: Number,
-      required: [true, "Current month days is required"],
-      min: [1, "Days must be at least 1"],
-      default: 30,
-    },
+ 
   
     location: {
       type: String,

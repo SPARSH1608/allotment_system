@@ -351,7 +351,7 @@ invoiceSchema.methods.convertNumberToWords = function (amount) {
     return result
   }
   
-  const rupees = Math.floor(amount)
+  let rupees = Math.floor(amount) // changed from const to let
   const paise = Math.round((amount - rupees) * 100)
   
   if (rupees === 0) {
@@ -365,24 +365,21 @@ invoiceSchema.methods.convertNumberToWords = function (amount) {
   if (rupees >= 10000000) {
     const crores = Math.floor(rupees / 10000000)
     result += convertHundreds(crores) + "Crore "
-    let remainingRupees = rupees % 10000000
-    rupees = remainingRupees
+    rupees = rupees % 10000000 // reassigning let variable
   }
   
   // Handle lakhs
   if (rupees >= 100000) {
     const lakhs = Math.floor(rupees / 100000)
     result += convertHundreds(lakhs) + "Lakh "
-    let remainingRupees = rupees % 100000
-    rupees = remainingRupees
+    rupees = rupees % 100000
   }
   
   // Handle thousands
   if (rupees >= 1000) {
     const thousands = Math.floor(rupees / 1000)
     result += convertHundreds(thousands) + "Thousand "
-    let remainingRupees = rupees % 1000
-    rupees = remainingRupees
+    rupees = rupees % 1000
   }
   
   // Handle hundreds

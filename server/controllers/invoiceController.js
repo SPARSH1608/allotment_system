@@ -156,6 +156,13 @@ const createInvoice = asyncHandler(async (req, res) => {
   const invoiceDateObj = invoiceDate ? new Date(invoiceDate) : new Date()
   const calculatedDueDate = dueDate ? new Date(dueDate) : new Date(invoiceDateObj.getTime() + 30 * 24 * 60 * 60 * 1000)
 
+  // Determine status based on due date
+  let status = "Draft"
+  const now = new Date()
+  if (calculatedDueDate < now) {
+    status = "Overdue"
+  }
+
   // Create invoice
   const invoice = await Invoice.create({
     invoiceNumber,
@@ -172,7 +179,7 @@ const createInvoice = asyncHandler(async (req, res) => {
     totalTaxAmount,
     grandTotal,
     notes,
-    status: "Draft",
+    status, // use computed status
   })
 
   res.status(201).json({

@@ -19,8 +19,8 @@ const router = express.Router()
 
 router
   .route("/")
-  .get(protect, checkPermission("invoices", "read"), getInvoices)
-  .post(protect, checkPermission("invoices", "write"), createInvoice)
+  .get( getInvoices)
+  .post( createInvoice)
 
 router.route("/stats").get(protect, checkPermission("invoices", "read"), getInvoiceStats)
 

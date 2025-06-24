@@ -24,8 +24,8 @@ const DashboardPage = () => {
     dispatch(fetchAllotmentTrends())
     dispatch(fetchOrganizationDistribution())
   }, [dispatch])
-console.log("DashboardPage rendered")
-console.log("Stats:", stats)
+  console.log("DashboardPage rendered")
+  console.log("Stats:", stats)
   console.log("Activities:", activities)
   console.log("Trends:", trends)
   console.log("Distribution:", distribution)
@@ -72,23 +72,23 @@ console.log("Stats:", stats)
   // Organization Distribution Pie Data
   const distributionData = distribution
     ? {
-        labels: distribution.map((org) => org.organization),
-        datasets: [
-          {
-            data: distribution.map((org) => org.count),
-            backgroundColor: [
-              "#6366f1",
-              "#f472b6",
-              "#34d399",
-              "#fbbf24",
-              "#60a5fa",
-              "#f87171",
-              "#a78bfa",
-              "#facc15",
-            ],
-          },
-        ],
-      }
+      labels: distribution.map((org) => org.organizationName),
+      datasets: [
+        {
+          data: distribution.map((org) => org.laptopCount),
+          backgroundColor: [
+            "#6366f1",
+            "#f472b6",
+            "#34d399",
+            "#fbbf24",
+            "#60a5fa",
+            "#f87171",
+            "#a78bfa",
+            "#facc15",
+          ],
+        },
+      ],
+    }
     : null
 
   // Map stats according to your backend structure
@@ -241,12 +241,11 @@ console.log("Stats:", stats)
                 activities.map((activity, idx) => (
                   <div key={idx} className="flex items-center space-x-4">
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        activity.type === "allot" ? "bg-green-500" :
-                        activity.type === "add_org" ? "bg-blue-500" :
-                        activity.type === "return" ? "bg-yellow-500" :
-                        activity.type === "overdue" ? "bg-red-500" : "bg-gray-400"
-                      }`}
+                      className={`w-2 h-2 rounded-full ${activity.type === "allot" ? "bg-green-500" :
+                          activity.type === "add_org" ? "bg-blue-500" :
+                            activity.type === "return" ? "bg-yellow-500" :
+                              activity.type === "overdue" ? "bg-red-500" : "bg-gray-400"
+                        }`}
                     ></div>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{activity.message}</p>
@@ -262,7 +261,7 @@ console.log("Stats:", stats)
         </Card>
 
         {/* Quick Actions */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
@@ -286,7 +285,7 @@ console.log("Stats:", stats)
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
       {error && <div className="text-red-500 mt-4">{error}</div>}
     </div>

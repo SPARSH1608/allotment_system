@@ -1,13 +1,11 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { useAppDispatch, useAllotments } from "../../hooks/useRedux"
 import { fetchOverdueAllotments } from "../../store/slices/allotmentSlice"
 import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
 import { Card } from "../ui/card"
-import  ExtendRentalModal  from "../extend-rental-modal"
-import  MarkReturnedModal  from "../mark-returned-modal"
+import ExtendRentalModal from "../extend-rental-modal"
+import MarkReturnedModal from "../mark-returned-modal"
 import { AlertTriangle, Calendar, Phone, Mail } from "lucide-react"
 
 export function OverdueAllotmentsTable() {
@@ -17,10 +15,12 @@ export function OverdueAllotmentsTable() {
   const [selectedAllotment, setSelectedAllotment] = useState(null)
   const [showExtendModal, setShowExtendModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
+  const [page, setPage] = useState(1)
+  const limit = 10 // Number of rows per page
 
   useEffect(() => {
-    dispatch(fetchOverdueAllotments())
-  }, [dispatch])
+    dispatch(fetchOverdueAllotments({ page, limit }))
+  }, [dispatch, page])
 
   const handleExtend = (allotment) => {
     setSelectedAllotment(allotment)
@@ -71,101 +71,131 @@ export function OverdueAllotmentsTable() {
             <p className="text-gray-500">No overdue allotments found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Asset Details
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Organization
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expected Return
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Overdue Days
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monthly Rent
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {overdueAllotments.map((allotment) => {
-                  const overdueDays = getOverdueDays(allotment.expectedReturnDate)
-                  return (
-                    <tr key={allotment.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-sm font-medium text-blue-600">{allotment.product?.assetId}</div>
-                          <div className="text-sm text-gray-900">{allotment.product?.model}</div>
-                          <div className="text-sm text-gray-500">{allotment.product?.company}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{allotment.organization?.name}</div>
-                          {allotment.contactPerson && (
-                            <div className="text-sm text-gray-500">{allotment.contactPerson}</div>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            {allotment.contactPhone && (
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <Phone className="w-3 h-3" />
-                                {allotment.contactPhone}
-                              </div>
-                            )}
-                            {allotment.contactEmail && (
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <Mail className="w-3 h-3" />
-                                {allotment.contactEmail}
-                              </div>
-                            )}
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Asset Details
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Organization
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Expected Return
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Overdue Days
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Monthly Rent
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {overdueAllotments.map((allotment) => {
+                    const overdueDays = getOverdueDays(allotment.dueDate)
+                    return (
+                      <tr key={allotment._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="text-sm font-medium text-blue-600">{allotment.laptopId?.id}</div>
+                            <div className="text-sm text-gray-900">{allotment.laptopId?.model}</div>
+                            <div className="text-sm text-gray-500">{allotment.laptopId?.company}</div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(allotment.expectedReturnDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={overdueDays > 30 ? "error" : overdueDays > 7 ? "warning" : "error"}>
-                          {overdueDays} days
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        ₹{allotment.monthlyRent?.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-blue-600 hover:text-blue-800"
-                            onClick={() => handleExtend(allotment)}
-                          >
-                            Extend
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-green-600 hover:text-green-800"
-                            onClick={() => handleReturn(allotment)}
-                          >
-                            Return
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{allotment.organizationId?.name}</div>
+                            {allotment.organizationId?.contactPerson && (
+                              <div className="text-sm text-gray-500">{allotment.organizationId.contactPerson}</div>
+                            )}
+                            <div className="flex items-center gap-2 mt-1">
+                              {allotment.organizationId?.contactPhone && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Phone className="w-3 h-3" />
+                                  {allotment.organizationId.contactPhone}
+                                </div>
+                              )}
+                              {allotment.organizationId?.contactEmail && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Mail className="w-3 h-3" />
+                                  {allotment.organizationId.contactEmail}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(allotment.dueDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge variant={overdueDays > 30 ? "error" : overdueDays > 7 ? "warning" : "error"}>
+                            {overdueDays} days
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          ₹{allotment.rentPer30Days?.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-blue-600 hover:text-blue-800"
+                              onClick={() => handleExtend(allotment)}
+                            >
+                              Extend
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-green-600 hover:text-green-800"
+                              onClick={() => handleReturn(allotment)}
+                            >
+                              Return
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+              <div className="text-sm text-gray-500">
+                Showing {(overduePagination.page - 1) * limit + 1} to{" "}
+                {Math.min(overduePagination.page * limit, overduePagination.total)} of {overduePagination.total} results
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm px-2">
+                  Page {overduePagination.page} of {overduePagination.pages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page === overduePagination.pages}
+                  onClick={() => setPage((p) => Math.min(overduePagination.pages, p + 1))}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </Card>
 
@@ -194,4 +224,5 @@ export function OverdueAllotmentsTable() {
     </>
   )
 }
-export default OverdueAllotmentsTable   
+
+export default OverdueAllotmentsTable

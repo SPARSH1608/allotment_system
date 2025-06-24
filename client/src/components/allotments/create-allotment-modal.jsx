@@ -10,11 +10,11 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Modal } from "../ui/modal"
 
-export function CreateAllotmentModal({ isOpen, onClose }) {
+export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId }) {
   const dispatch = useAppDispatch()
   const { products } = useProducts()
   const { organizations } = useOrganizations()
-console.log(organizations)
+
   // Helper to get next month date string (YYYY-MM-DD), handles year change
   const getNextMonthDate = (dateStr) => {
     const date = new Date(dateStr)
@@ -32,7 +32,7 @@ console.log(organizations)
 
   const [formData, setFormData] = useState({
     laptopId: "",
-    organizationId: "",
+    organizationId: defaultOrganizationId || "",
     handoverDate: new Date().toISOString().split("T")[0],
     dueDate: getNextMonthDate(new Date().toISOString().split("T")[0]),
     rentPer30Days: "",
@@ -41,12 +41,23 @@ console.log(organizations)
 
   const [loading, setLoading] = useState(false)
 
+  // Set default organizationId when modal opens or defaultOrganizationId changes
+  useEffect(() => {
+    if (isOpen && defaultOrganizationId) {
+      setFormData((prev) => ({
+        ...prev,
+        organizationId: defaultOrganizationId
+      }))
+    }
+    // eslint-disable-next-line
+  }, [isOpen, defaultOrganizationId])
+
   useEffect(() => {
     if (isOpen) {
-      dispatch(fetchProducts())
-      dispatch(fetchOrganizations())
+      if (!products || products.length === 0) dispatch(fetchProducts())
+      if (!organizations || organizations.length === 0) dispatch(fetchOrganizations())
     }
-  }, [isOpen, dispatch])
+  }, [isOpen, dispatch, products, organizations])
 
   // Update dueDate when handoverDate changes
   useEffect(() => {
@@ -109,7 +120,7 @@ console.log(organizations)
       onClose()
       setFormData({
         laptopId: "",
-        organizationId: "",
+        organizationId: defaultOrganizationId || "",
         handoverDate: new Date().toISOString().split("T")[0],
         dueDate: getNextMonthDate(new Date().toISOString().split("T")[0]),
         rentPer30Days: "",
@@ -155,6 +166,7 @@ console.log(organizations)
               value={formData.organizationId}
               onChange={(e) => handleInputChange("organizationId", e.target.value)}
               required
+              disabled={!!defaultOrganizationId} // Disable if defaultOrganizationId is provided
             >
               <option value="">Select Organization</option>
               {organizations.map((org) => (

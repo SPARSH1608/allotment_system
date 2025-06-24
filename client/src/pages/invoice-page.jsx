@@ -1,160 +1,85 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchInvoices, sendInvoiceEmail, markInvoicePaid } from "../store/slices/invoiceSlice"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
 import { Download, Eye, Search, Plus, Upload, FileText } from "lucide-react"
-import  CreateInvoiceModal  from "../components/create-invoice-modal"
+import CreateInvoiceModal from "../components/create-invoice-modal"
 import { InvoicePreview } from "../components/invoice-preview"
-
-const mockInvoices = [
-  {
-    invoiceNumber: "INV-2024-0001",
-    invoiceDate: "2024-03-15",
-    dueDate: "2024-04-14",
-    status: "Paid",
-    companyDetails: {
-      name: "TechRent Solutions Pvt Ltd",
-      address: "123 Business Park, Tech City, State - 123456",
-      mobileNumber: "+91-9876543210",
-      gstin: "29ABCDE1234F1Z5",
-      bankDetails: {
-        bankName: "State Bank of India",
-        bankAddress: "Main Branch, Tech City",
-        accountNumber: "1234567890123456",
-        ifscCode: "SBIN0001234",
-      },
-    },
-    organizationDetails: {
-      name: "TechCorp Solutions",
-      address: "456 Tech Street, Innovation City, State - 560001",
-      contactPerson: "John Smith",
-      contactEmail: "john.smith@techcorp.com",
-      phoneNumber: "+91-9876543210",
-      gstin: "29ABCDE1234F2Z6",
-    },
-    items: [
-      {
-        productId: "LP001",
-        description: "Lenovo ThinkPad E14 - Intel i5 8GB RAM 256GB SSD",
-        quantity: 2,
-        rentDuration: 30,
-        ratePerDay: 100,
-        totalAmount: 6000,
-      },
-    ],
-    subtotal: 6000,
-    sgstRate: 9,
-    sgstAmount: 540,
-    cgstRate: 9,
-    cgstAmount: 540,
-    totalTaxAmount: 1080,
-    grandTotal: 7080,
-    grandTotalInWords: "Seven Thousand Eighty Rupees Only",
-    declarations: [
-      "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
-      "This is a computer generated invoice and does not require physical signature.",
-      "Subject to jurisdiction of courts in Tech City only.",
-      "Payment terms: Net 30 days from invoice date.",
-    ],
-    authorizedSignatory: {
-      name: "Authorized Signatory",
-      designation: "Manager",
-    },
-  },
-  {
-    invoiceNumber: "INV-2024-0002",
-    invoiceDate: "2024-03-20",
-    dueDate: "2024-04-19",
-    status: "Sent",
-    companyDetails: {
-      name: "TechRent Solutions Pvt Ltd",
-      address: "123 Business Park, Tech City, State - 123456",
-      mobileNumber: "+91-9876543210",
-      gstin: "29ABCDE1234F1Z5",
-      bankDetails: {
-        bankName: "State Bank of India",
-        bankAddress: "Main Branch, Tech City",
-        accountNumber: "1234567890123456",
-        ifscCode: "SBIN0001234",
-      },
-    },
-    organizationDetails: {
-      name: "DataSoft Inc",
-      address: "789 Data Avenue, Digital Park, State - 560002",
-      contactPerson: "Sarah Johnson",
-      contactEmail: "sarah.johnson@datasoft.com",
-      phoneNumber: "+91-9876543211",
-      gstin: "29ABCDE1234F3Z7",
-    },
-    items: [
-      {
-        productId: "LP002",
-        description: "Dell Inspiron 15 - Intel i7 16GB RAM 512GB SSD",
-        quantity: 1,
-        rentDuration: 45,
-        ratePerDay: 150,
-        totalAmount: 6750,
-      },
-    ],
-    subtotal: 6750,
-    sgstRate: 9,
-    sgstAmount: 607.5,
-    cgstRate: 9,
-    cgstAmount: 607.5,
-    totalTaxAmount: 1215,
-    grandTotal: 7965,
-    grandTotalInWords: "Seven Thousand Nine Hundred Sixty Five Rupees Only",
-    declarations: [
-      "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.",
-      "This is a computer generated invoice and does not require physical signature.",
-      "Subject to jurisdiction of courts in Tech City only.",
-      "Payment terms: Net 30 days from invoice date.",
-    ],
-    authorizedSignatory: {
-      name: "Authorized Signatory",
-      designation: "Manager",
-    },
-  },
-]
+import html2pdf from "html2pdf.js"
 
 export function InvoicesPage() {
+  const dispatch = useDispatch()
+  const { invoices, loading, error } = useSelector(state => state.invoices)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const previewRef = useRef(null)
 
-  const filteredInvoices = mockInvoices.filter((invoice) => {
-    const matchesSearch =
-      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.organizationDetails.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.organizationDetails.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesStatus = statusFilter === "all" || invoice.status.toLowerCase() === statusFilter.toLowerCase()
-
-    return matchesSearch && matchesStatus
-  })
+  // Ensure correct status value is sent to backend
+  useEffect(() => {
+    let status = statusFilter
+    if (status === "all") status = ""
+    // Capitalize first letter for backend if needed
+    if (status) status = status.charAt(0).toUpperCase() + status.slice(1)
+    dispatch(fetchInvoices({ search: searchTerm, status }))
+  }, [dispatch, searchTerm, statusFilter])
 
   const handleViewInvoice = (invoice) => {
     setSelectedInvoice(invoice)
     setIsPreviewOpen(true)
   }
 
-  const handleEditInvoice = () => {
-    setIsPreviewOpen(false)
-    setIsCreateModalOpen(true)
+  const handleEditInvoice = (invoice) => {
+    setSelectedInvoice(invoice); // set the invoice to edit
+    setIsPreviewOpen(false);     // close preview
+    setIsCreateModalOpen(true);  // open modal
   }
 
+  // Download PDF using html2pdf.js and the previewRef
   const handleDownloadPDF = (invoice) => {
-    console.log("Downloading PDF for invoice:", invoice.invoiceNumber)
-    // Implement PDF download logic
+    if (previewRef.current) {
+      console.log("Starting PDF generation...");
+      html2pdf()
+        .from(previewRef.current)
+        .set({
+          margin: 0.5,
+          filename: `Invoice_${invoice.invoiceNumber}.pdf`,
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+        })
+        .toPdf()
+        .get('html2canvas')
+        .then((canvas) => {
+          // Log canvas image size
+          const dataUrl = canvas.toDataURL("image/png");
+          const sizeKB = Math.round((dataUrl.length * 3) / 4 / 1024);
+          console.log(`Rendered canvas image size: ~${sizeKB} KB`);
+        })
+        .then(function (instance) {
+          // Save the PDF and log after saving
+          return instance.save().then(() => {
+            console.log("PDF file has been saved.");
+          });
+        });
+    } else {
+      setSelectedInvoice(invoice)
+      setIsPreviewOpen(true)
+    }
   }
 
   const handleSendInvoice = (invoice) => {
-    console.log("Sending invoice:", invoice.invoiceNumber)
-    // Implement email sending logic
+    dispatch(sendInvoiceEmail({ invoiceNumber: invoice.invoiceNumber, emailData: {/* ... */} }))
+    // Optionally show notification
+  }
+
+  const handleMarkAsPaid = async (invoice) => {
+    await dispatch(markInvoicePaid({ invoiceNumber: invoice.invoiceNumber, paymentData: { paymentDate: new Date() } }))
   }
 
   const getStatusColor = (status) => {
@@ -174,9 +99,10 @@ export function InvoicesPage() {
     return (
       <div className="p-8">
         <InvoicePreview
+          ref={previewRef}
           invoice={selectedInvoice}
-          onEdit={handleEditInvoice}
-          onDownload={() => handleDownloadPDF(selectedInvoice)}
+          onEdit={() => handleEditInvoice(selectedInvoice)}
+          onDownload={(callbacks) => handleDownloadPDF(selectedInvoice, callbacks)}
           onSend={() => handleSendInvoice(selectedInvoice)}
         />
         <div className="mt-6 text-center">
@@ -194,10 +120,7 @@ export function InvoicesPage() {
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold text-gray-900">Invoices</h1>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Export
-            </Button>
+            {/* Removed Export button */}
             <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               Create Invoice
@@ -208,7 +131,7 @@ export function InvoicesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -216,7 +139,7 @@ export function InvoicesPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">{mockInvoices.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
             </div>
           </div>
         </div>
@@ -231,23 +154,7 @@ export function InvoicesPage() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Paid</p>
               <p className="text-2xl font-bold text-gray-900">
-                {mockInvoices.filter((inv) => inv.status === "Paid").length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <div className="w-6 h-6 bg-yellow-600 rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Sent</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {mockInvoices.filter((inv) => inv.status === "Sent").length}
+                {invoices.filter((inv) => inv.status === "Paid").length}
               </p>
             </div>
           </div>
@@ -263,13 +170,13 @@ export function InvoicesPage() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Overdue</p>
               <p className="text-2xl font-bold text-gray-900">
-                {mockInvoices.filter((inv) => inv.status === "Overdue").length}
+                {invoices.filter((inv) => inv.status === "Overdue").length}
               </p>
             </div>
           </div>
         </div>
       </div>
-
+      
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
@@ -289,10 +196,10 @@ export function InvoicesPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">All Status</option>
-              <option value="paid">Paid</option>
-              <option value="sent">Sent</option>
-              <option value="overdue">Overdue</option>
-              <option value="draft">Draft</option>
+              <option value="Paid">Paid</option>
+              <option value="Sent">Sent</option>
+              <option value="Overdue">Overdue</option>
+              <option value="Draft">Draft</option>
             </select>
           </div>
         </div>
@@ -314,10 +221,15 @@ export function InvoicesPage() {
                   Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Due Date
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {/** New column header */}
+                  {/** Show "Payment Date" and "Due Date" as separate columns */}
+                  Payment Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Due Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -325,7 +237,7 @@ export function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInvoices.map((invoice) => (
+              {invoices.map((invoice) => (
                 <tr key={invoice.invoiceNumber} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -345,11 +257,20 @@ export function InvoicesPage() {
                     <div className="text-sm font-medium text-gray-900">₹{invoice.grandTotal.toLocaleString()}</div>
                     <div className="text-xs text-gray-500">(incl. ₹{invoice.totalTaxAmount.toLocaleString()} tax)</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(invoice.dueDate).toLocaleDateString("en-IN")}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+                  </td>
+                  {/* Payment Date column */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {invoice.status === "Paid" && invoice.paymentDate
+                      ? new Date(invoice.paymentDate).toLocaleDateString("en-IN")
+                      : "--"}
+                  </td>
+                  {/* Due Date column */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {invoice.status !== "Paid" && invoice.dueDate
+                      ? new Date(invoice.dueDate).toLocaleDateString("en-IN")
+                      : "--"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
@@ -366,11 +287,24 @@ export function InvoicesPage() {
                         variant="ghost"
                         size="sm"
                         className="text-blue-600 hover:text-blue-800"
-                        onClick={() => handleDownloadPDF(invoice)}
+                        onClick={() => {
+                          setSelectedInvoice(invoice)
+                          setIsPreviewOpen(true)
+                        }}
                       >
                         <Download className="w-4 h-4 mr-1" />
                         PDF
                       </Button>
+                      {invoice.status !== "Paid" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-green-600 hover:text-green-800"
+                          onClick={() => handleMarkAsPaid(invoice)}
+                        >
+                          Mark as Paid
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -380,7 +314,11 @@ export function InvoicesPage() {
         </div>
       </div>
 
-      <CreateInvoiceModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      <CreateInvoiceModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        invoice={selectedInvoice} // pass the invoice data here
+      />
     </div>
   )
 }

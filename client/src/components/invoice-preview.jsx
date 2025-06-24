@@ -1,9 +1,15 @@
 "use client"
+import React, { forwardRef } from "react"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
-import { Download, Send, Edit } from "lucide-react"
+import { Download, Send, Edit, Image as ImageIcon } from "lucide-react"
+import html2canvas from "html2canvas-pro"
+import jsPDF from "jspdf"
 
-export function InvoicePreview({ invoice, onEdit, onDownload, onSend }) {
+export const InvoicePreview = forwardRef(function InvoicePreview(
+  { invoice, onEdit, onDownload, onSend },
+  ref
+) {
   if (!invoice) return null
 
   const formatDate = (date) => {
@@ -22,6 +28,28 @@ export function InvoicePreview({ invoice, onEdit, onDownload, onSend }) {
     }).format(amount)
   }
 
+  // Download handler using html2canvas-pro and jsPDF for PDF snap
+  const handleDownloadPDF = async () => {
+    if (ref && ref.current) {
+      console.log("Capturing preview as PDF...")
+      const canvas = await html2canvas(ref.current, { scale: 2 })
+      const imgData = canvas.toDataURL("image/png")
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      })
+      // Calculate width/height for A4
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = pageWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight)
+      pdf.save(`Invoice_${invoice.invoiceNumber}.pdf`)
+      console.log("PDF file has been saved.")
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto bg-white">
       {/* Header Actions */}
@@ -35,7 +63,7 @@ export function InvoicePreview({ invoice, onEdit, onDownload, onSend }) {
             <Edit className="w-4 h-4 mr-1" />
             Edit
           </Button>
-          <Button variant="outline" size="sm" onClick={onDownload}>
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
             <Download className="w-4 h-4 mr-1" />
             Download PDF
           </Button>
@@ -47,7 +75,7 @@ export function InvoicePreview({ invoice, onEdit, onDownload, onSend }) {
       </div>
 
       {/* Invoice Content */}
-      <div className="p-8 border border-gray-200 rounded-lg">
+      <div ref={ref} className="invoice-preview-capture p-8 border border-gray-200 rounded-lg">
         {/* Invoice Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -101,7 +129,7 @@ export function InvoicePreview({ invoice, onEdit, onDownload, onSend }) {
               <p>{invoice.organizationDetails.address}</p>
               <p>Contact: {invoice.organizationDetails.contactPerson}</p>
               <p>Email: {invoice.organizationDetails.contactEmail}</p>
-              <p>Phone: {invoice.organizationDetails.phoneNumber}</p>
+              <p>Phone: {invoice.organizationDetails.contactPhone}</p>
               {invoice.organizationDetails.gstin && <p>GSTIN: {invoice.organizationDetails.gstin}</p>}
             </div>
           </div>
@@ -230,4 +258,4 @@ export function InvoicePreview({ invoice, onEdit, onDownload, onSend }) {
       </div>
     </div>
   )
-}
+})

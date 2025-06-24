@@ -293,7 +293,7 @@ const getOverdueAllotments = asyncHandler(async (req, res) => {
   // Find allotments where due date has passed and status is still Active
   const overdueAllotments = await Allotment.find({
     dueDate: { $lt: today },
-    status: { $in: ["Active", "Extended"] },
+    status: { $in: ["Active", "Extended","Overdue"] },
   })
     .populate("laptopId", "id model company")
     .populate("organizationId", "id name contactPerson contactEmail contactPhone")

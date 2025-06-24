@@ -173,7 +173,7 @@ const deleteOrganization = asyncHandler(async (req, res) => {
     })
   }
 
-  await Organization.findOneAndDelete({ id: req.params.id })
+  await Organization.findOneAndDelete({ _id: req.params.id })
 
   res.status(200).json({
     success: true,
