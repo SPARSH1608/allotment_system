@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
-import { useParams, Link, useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import {
   fetchOrganizationById,
@@ -10,12 +9,7 @@ import {
   updateOrganization,
   deleteOrganization
 } from "../store/slices/organizationSlice"
-import {
-  fetchOrganizationById,
-  clearCurrentOrganization,
-  updateOrganization,
-  deleteOrganization
-} from "../store/slices/organizationSlice"
+
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
@@ -29,7 +23,6 @@ const OrganizationDetailPage = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { currentOrganization, loading, error } = useSelector(state => state.organizations)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchLaptops, setSearchLaptops] = useState("")
   const [activeTab, setActiveTab] = useState("All")

@@ -96,7 +96,7 @@ console.log("Laptop found:", laptop)
   }
 
   // Check if organization exists
-  const organization = await Organization.findOne({ id: organizationId })
+  const organization = await Organization.findOne({ _id: organizationId })
   if (!organization) {
     return res.status(404).json({
       success: false,
@@ -194,10 +194,10 @@ const extendAllotment = asyncHandler(async (req, res) => {
     })
   }
 
-  if (allotment.status === "Returned" || allotment.status === "Overdue") {
+  if (allotment.status === "Returned" ) {
     return res.status(400).json({
       success: false,
-      message: "Can only extend active or extended allotments",
+      message: "Can only extend active or extended or overdue allotments",
     })
   }
 
@@ -262,7 +262,7 @@ const returnAllotment = asyncHandler(async (req, res) => {
 
   // Update laptop status
   await Product.findOneAndUpdate(
-    { id: allotment.laptopId },
+    { _id: allotment.laptopId },
     {
       status: "Available",
       currentAllotmentId: null,

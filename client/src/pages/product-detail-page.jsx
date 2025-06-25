@@ -66,6 +66,17 @@ const ProductDetailPage = () => {
   // Helper for date formatting
   const formatDate = (dateStr) => (dateStr ? new Date(dateStr).toLocaleDateString() : "-")
 
+  // Helper to calculate duration in days between two dates
+  const calculateDuration = (handoverDate, surrenderDate) => {
+    if (!handoverDate || !surrenderDate) return "-"
+    const start = new Date(handoverDate)
+    const end = new Date(surrenderDate)
+    const diffTime = end - start
+    if (isNaN(diffTime)) return "-"
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays > 0 ? diffDays + " days" : "1 day"
+  }
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -172,47 +183,49 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Current Allotment */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Allotment</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Organization</p>
-                <p className="text-gray-900">{currentAllotment?.organizationId?.name || "-"}</p>
+        {currentAllotment && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Allotment</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Organization</p>
+                  <p className="text-gray-900">{currentAllotment.organizationId?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Location</p>
+                  <p className="text-gray-900">
+                    {currentAllotment.organizationId?.location || currentAllotment.location || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Handover Date</p>
+                  <p className="text-gray-900">{formatDate(currentAllotment.handoverDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Monthly Rent</p>
+                  <p className="text-lg font-bold text-green-600">
+                    ₹{currentAllotment.rentPer30Days?.toLocaleString() || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Status</p>
+                  <Badge variant={currentAllotment.status === "Active" ? "success" : "warning"}>
+                    {currentAllotment.status || "-"}
+                  </Badge>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Location</p>
-                <p className="text-gray-900">
-                  {currentAllotment?.organizationId?.location || currentAllotment?.location || "-"}
-                </p>
+              <div className="mt-6 space-y-3">
+                <Button className="w-full" onClick={() => setIsExtendModalOpen(true)}>
+                  Extend Rental
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => setIsReturnModalOpen(true)}>
+                  Mark as Returned
+                </Button>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Handover Date</p>
-                <p className="text-gray-900">{formatDate(currentAllotment?.handoverDate)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Monthly Rent</p>
-                <p className="text-lg font-bold text-green-600">
-                  ₹{currentAllotment?.rentPer30Days?.toLocaleString() || "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Status</p>
-                <Badge variant={currentAllotment?.status === "Active" ? "success" : "warning"}>
-                  {currentAllotment?.status || "-"}
-                </Badge>
-              </div>
-            </div>
-            <div className="mt-6 space-y-3">
-              <Button className="w-full" onClick={() => setIsExtendModalOpen(true)}>
-                Extend Rental
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => setIsReturnModalOpen(true)}>
-                Mark as Returned
-              </Button>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Allotment History */}
@@ -281,7 +294,9 @@ const ProductDetailPage = () => {
                       {record.surrenderDate ? formatDate(record.surrenderDate) : "-"}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {record.currentMonthDays || "-"}
+                    {record.surrenderDate && record.handoverDate
+          ? calculateDuration(record.handoverDate, record.surrenderDate)
+          : "-"}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       ₹{record.rentPer30Days?.toLocaleString() || "-"}

@@ -11,6 +11,7 @@ import {
   selectAllAllotments,
   clearSelection,
 } from "../store/slices/allotmentSlice"
+import { fetchOrganizations } from "../store/slices/organizationSlice"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Badge } from "../components/ui/badge"
@@ -24,21 +25,28 @@ import { Search, Plus, Filter, Download, Eye, History, Upload } from "lucide-rea
 import { BulkAllotmentModal } from "../components/allotments/bulk-allotment-modal"
 import { Modal } from "../components/ui/modal"
 import { BulkUploadHistory } from "../components/allotments/bulk-upload-history"
+import { useSelector } from "react-redux"
+import BulkReturnModal from "../components/bulk-return-modal"
+import BulkExtendModal from "../components/bulk-extend-modal"
 
 export function AllotmentsPage() {
   const dispatch = useAppDispatch()
   const { allotments, loading, error, pagination, filters, selectedAllotments } = useAllotments()
+  const organizations = useSelector((state) => state.organizations.organizations || [])
 console.log("Allotments:", allotments)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showExtendModal, setShowExtendModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
+  const [showBulkReturnModal, setShowBulkReturnModal] = useState(false)
+  const [showBulkExtendModal, setShowBulkExtendModal] = useState(false)
   const [selectedAllotment, setSelectedAllotment] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [showHistoryModal, setShowHistoryModal] = useState(false)
 
   useEffect(() => {
     dispatch(fetchAllotments({ ...filters, page: 1 }))
+    dispatch(fetchOrganizations())
   }, [dispatch, filters])
 
   const handleSearch = (e) => {
@@ -47,8 +55,27 @@ console.log("Allotments:", allotments)
     dispatch(setFilters({ search: value }))
   }
 
+  const statusMap = {
+    active: "Active",
+    overdue: "Overdue",
+    returned: "Returned",
+    cancelled: "Cancelled",
+    extended: "Extended",
+  }
+
+  // Helper to get the key from the value
+  const getStatusKey = (value) => {
+    if (!value) return ""
+    const entry = Object.entries(statusMap).find(([, v]) => v === value)
+    return entry ? entry[0] : ""
+  }
+
   const handleFilterChange = (key, value) => {
-    dispatch(setFilters({ [key]: value }))
+    if (key === "status") {
+      dispatch(setFilters({ status: value ? statusMap[value] : "" }))
+    } else {
+      dispatch(setFilters({ [key]: value }))
+    }
   }
 
   const handleClearFilters = () => {
@@ -105,6 +132,9 @@ console.log("Allotments:", allotments)
     alert("Export selected allotments: " + selectedAllotments.join(", "))
   }
 
+  // Get selected allotment objects
+  const selectedAllotmentObjs = allotments.filter(a => selectedAllotments.includes(a._id))
+
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
@@ -114,14 +144,6 @@ console.log("Allotments:", allotments)
           <p className="text-gray-600">Manage laptop allotments and track their status</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowHistoryModal(true)}>
-            <History className="w-4 h-4 mr-2" />
-            Upload History
-          </Button>
-          <Button variant="outline" onClick={() => setShowBulkModal(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Bulk Upload
-          </Button>
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Create Allotment
@@ -132,8 +154,7 @@ console.log("Allotments:", allotments)
       {/* Stats Cards */}
       <AllotmentStatsCard />
 
-      {/* Overdue Allotments */}
-      <OverdueAllotmentsTable />
+  
 
       {/* Filters */}
       <Card className="p-6">
@@ -145,7 +166,7 @@ console.log("Allotments:", allotments)
           <div className="flex gap-3">
             <select
               className="px-3 py-2 border border-gray-300 rounded-md text-sm w-40"
-              value={filters.status}
+              value={getStatusKey(filters.status)}
               onChange={(e) => handleFilterChange("status", e.target.value)}
             >
               <option value="">All Status</option>
@@ -161,7 +182,11 @@ console.log("Allotments:", allotments)
               onChange={(e) => handleFilterChange("organizationId", e.target.value)}
             >
               <option value="">All Organizations</option>
-              {/* Organizations will be populated from Redux store */}
+              {organizations.map((org) => (
+                <option key={org._id} value={org._id}>
+                  {org.name}
+                </option>
+              ))}
             </select>
             <Button variant="outline" onClick={handleClearFilters}>
               <Filter className="w-4 h-4 mr-2" />
@@ -181,10 +206,10 @@ console.log("Allotments:", allotments)
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">{selectedAllotments.length} allotment(s) selected</span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setShowBulkReturnModal(true)}>
                 Bulk Return
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setShowBulkExtendModal(true)}>
                 Bulk Extend
               </Button>
               <Button variant="outline" size="sm" onClick={() => dispatch(clearSelection())}>
@@ -205,6 +230,10 @@ console.log("Allotments:", allotments)
         ) : error ? (
           <div className="p-8 text-center">
             <p className="text-red-600">Error: {error}</p>
+          </div>
+        ) : allotments.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No allotments available
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -346,6 +375,8 @@ console.log("Allotments:", allotments)
           onClose={() => {
             setShowExtendModal(false)
             setSelectedAllotment(null)
+            dispatch(fetchOrganizations())
+            dispatch(fetchAllotments({ ...filters, page: pagination.page }))
           }}
           allotment={selectedAllotment}
         />
@@ -357,6 +388,8 @@ console.log("Allotments:", allotments)
           onClose={() => {
             setShowReturnModal(false)
             setSelectedAllotment(null)
+            dispatch(fetchOrganizations())
+            dispatch(fetchAllotments({ ...filters, page: pagination.page }))
           }}
           allotment={selectedAllotment}
         />
@@ -378,6 +411,17 @@ console.log("Allotments:", allotments)
           <BulkUploadHistory />
         </Modal>
       )}
+
+      <BulkReturnModal
+        isOpen={showBulkReturnModal}
+        onClose={() => setShowBulkReturnModal(false)}
+        allotments={selectedAllotmentObjs}
+      />
+      <BulkExtendModal
+        isOpen={showBulkExtendModal}
+        onClose={() => setShowBulkExtendModal(false)}
+        allotments={selectedAllotmentObjs}
+      />
     </div>
   )
 }

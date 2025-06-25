@@ -96,9 +96,6 @@ console.log(products)
       return status === "rented" || status === "allotted"
     }
   ).length
-  const overdueCount = products.filter(
-    (p) => (p.status || "").toLowerCase() === "overdue"
-  ).length
 
   // Bulk Upload
   const handleBulkUpload = async (file) => {
@@ -132,7 +129,7 @@ console.log(products)
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -169,20 +166,6 @@ console.log(products)
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Available</p>
               <p className="text-2xl font-bold text-gray-900">{availableCount}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-gray-900">{overdueCount}</p>
             </div>
           </div>
         </div>
