@@ -110,10 +110,7 @@ const getOrganization = asyncHandler(async (req, res) => {
 // @access  Public
 const createOrganization = asyncHandler(async (req, res) => {
   // Generate organization ID if not provided
-  if (!req.body.id) {
-    const count = await Organization.countDocuments()
-    req.body.id = `ORG${String(count + 1).padStart(3, "0")}`
-  }
+
 
   const organization = await Organization.create(req.body)
 

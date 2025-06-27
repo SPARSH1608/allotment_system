@@ -4,6 +4,25 @@ import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Modal } from "./ui/modal"
 
+const COMPANY_OPTIONS = [
+  "Lenovo", "Dell", "HP", "Apple", "Asus", "Acer", "Microsoft", "Samsung", "MSI", "Toshiba", "Fujitsu", "LG", "Sony", "Huawei", "Other"
+]
+const PROCESSOR_OPTIONS = [
+   "I3", "I5", "I7", "I9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "Ryzen 9", "M1", "M2", "M3", "Pentium", "Celeron", "Core 2 Duo", "Xeon", "Other"
+]
+const RAM_OPTIONS = [
+  "2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "20GB", "24GB", "32GB", "64GB", "128GB"
+]
+const SSD_OPTIONS = [
+  "None", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB", "8TB"
+]
+const HDD_OPTIONS = [
+  "None", "128GB", "256GB", "320GB", "500GB", "1TB", "2TB", "4TB"
+]
+const WINDOWS_OPTIONS = [
+  "Win7", "Win8", "Win8.1", "Win10", "Win11", "macOS", "Ubuntu", "Fedora", "Debian", "Linux Mint", "Other", "WIN10", "Mac OS"
+]
+
 function AddProductModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     assetId: "",
@@ -87,7 +106,7 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               id="serialNumber"
               value={formData.serialNumber}
               onChange={(e) => handleInputChange("serialNumber", e.target.value)}
-              required
+           
             />
           </div>
           <div className="space-y-2">
@@ -99,12 +118,9 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               required
             >
               <option value="">Select Brand</option>
-              <option value="Lenovo">Lenovo</option>
-              <option value="Dell">Dell</option>
-              <option value="HP">HP</option>
-              <option value="Apple">Apple</option>
-              <option value="Asus">Asus</option>
-              <option value="Acer">Acer</option>
+              {COMPANY_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -118,15 +134,9 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               required
             >
               <option value="">Select Processor</option>
-              <option value="i3">Intel i3</option>
-              <option value="i5">Intel i5</option>
-              <option value="i7">Intel i7</option>
-              <option value="i9">Intel i9</option>
-              <option value="Ryzen 3">AMD Ryzen 3</option>
-              <option value="Ryzen 5">AMD Ryzen 5</option>
-              <option value="Ryzen 7">AMD Ryzen 7</option>
-              <option value="M1 Chip">Apple M1</option>
-              <option value="M2 Chip">Apple M2</option>
+              {PROCESSOR_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-2">
@@ -149,9 +159,9 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               required
             >
               <option value="">Select RAM</option>
-              <option value="8GB">8GB</option>
-              <option value="16GB">16GB</option>
-              <option value="32GB">32GB</option>
+              {RAM_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-2">
@@ -160,14 +170,12 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
               value={formData.ssd}
               onChange={(e) => handleInputChange("ssd", e.target.value)}
-              required
+            
             >
               <option value="">Select SSD</option>
-              <option value="128GB">128GB SSD</option>
-              <option value="256GB">256GB SSD</option>
-              <option value="512GB">512GB SSD</option>
-              <option value="1TB">1TB SSD</option>
-              <option value="2TB">2TB SSD</option>
+              {SSD_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -179,10 +187,9 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               value={formData.hdd}
               onChange={(e) => handleInputChange("hdd", e.target.value)}
             >
-              <option value="None">None</option>
-              <option value="500GB">500GB HDD</option>
-              <option value="1TB">1TB HDD</option>
-              <option value="2TB">2TB HDD</option>
+              {HDD_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-2">
@@ -194,10 +201,9 @@ function AddProductModal({ isOpen, onClose, onSubmit }) {
               required
             >
               <option value="">Select OS</option>
-              <option value="Win10">Windows 10 Pro</option>
-              <option value="Win11">Windows 11 Pro</option>
-              <option value="Ubuntu">Ubuntu</option>
-              <option value="macOS">macOS</option>
+              {WINDOWS_OPTIONS.map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
             </select>
           </div>
         </div>

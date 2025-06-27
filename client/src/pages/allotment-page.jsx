@@ -144,6 +144,10 @@ console.log("Allotments:", allotments)
           <p className="text-gray-600">Manage laptop allotments and track their status</p>
         </div>
         <div className="flex gap-2">
+        <Button variant="outline" onClick={() => setShowBulkModal(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
+          </Button>
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Create Allotment

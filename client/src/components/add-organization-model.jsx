@@ -38,7 +38,7 @@ const AddOrganizationModal = ({ isOpen, onClose, onSubmit, loading, defaultValue
   const handleSubmit = (e) => {
     e.preventDefault()
     const payload = {
-      name: formData.organizationName,
+      id: formData.organizationName,
       location: formData.location,
       contactPerson: formData.contactPerson,
       contactEmail: formData.email,

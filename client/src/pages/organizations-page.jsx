@@ -93,11 +93,11 @@ console.log("Organizations:", organizations)
                   </div>
                   <div className="text-sm">
                     <span className="text-gray-600">Email:</span>
-                    <div className="font-medium">{org.email}</div>
+                    <div className="font-medium">{org.contactEmail}</div>
                   </div>
                   <div className="text-sm">
                     <span className="text-gray-600">Phone:</span>
-                    <div className="font-medium">{org.phone}</div>
+                    <div className="font-medium">{org.contactPhone}</div>
                   </div>
                 </div>
                 <div className="flex justify-between items-center text-center pt-3 border-t border-gray-200">

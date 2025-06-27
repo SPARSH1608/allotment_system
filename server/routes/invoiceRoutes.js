@@ -13,32 +13,30 @@ const {
   updateCompanySettings,
 } = require("../controllers/invoiceController")
 
-const { protect, checkPermission } = require("../middleware/auth")
-
 const router = express.Router()
 
 router
   .route("/")
-  .get( getInvoices)
-  .post( createInvoice)
+  .get(getInvoices)
+  .post(createInvoice)
 
-router.route("/stats").get(protect, checkPermission("invoices", "read"), getInvoiceStats)
+router.route("/stats").get(getInvoiceStats)
 
 router
   .route("/company-settings")
-  .get(protect, checkPermission("invoices", "read"), getCompanySettings)
-  .put(protect, checkPermission("invoices", "write"), updateCompanySettings)
+  .get(getCompanySettings)
+  .put(updateCompanySettings)
 
 router
   .route("/:invoiceNumber")
-  .get(protect, checkPermission("invoices", "read"), getInvoice)
-  .put(protect, checkPermission("invoices", "write"), updateInvoice)
-  .delete(protect, checkPermission("invoices", "delete"), deleteInvoice)
+  .get(getInvoice)
+  .put(updateInvoice)
+  .delete(deleteInvoice)
 
-router.route("/:invoiceNumber/pay").post(protect, checkPermission("invoices", "write"), markInvoicePaid)
+router.route("/:invoiceNumber/pay").post(markInvoicePaid)
 
-router.route("/:invoiceNumber/send").post(protect, checkPermission("invoices", "write"), sendInvoice)
+router.route("/:invoiceNumber/send").post(sendInvoice)
 
-router.route("/:invoiceNumber/pdf").get(protect, checkPermission("invoices", "read"), generateInvoicePDF)
+router.route("/:invoiceNumber/pdf").get(generateInvoicePDF)
 
 module.exports = router

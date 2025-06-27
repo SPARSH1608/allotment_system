@@ -68,6 +68,9 @@ const getProduct = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Public
 const createProduct = asyncHandler(async (req, res) => {
+  if (!req.body.serialNumber || req.body.serialNumber.trim() === "") {
+    req.body.serialNumber = "0000"
+  }
   const product = await Product.create(req.body)
 
   res.status(201).json({

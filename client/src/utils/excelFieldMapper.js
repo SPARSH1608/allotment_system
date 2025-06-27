@@ -308,27 +308,30 @@ export const FIELD_MAPPINGS = {
   // Validate allotment data
   export function validateAllotmentData(allotment) {
     const errors = []
-  
-    if (!allotment.productSerialNumber) {
+
+    // Allow "0000" as a valid serial number
+    if (!allotment.productSerialNumber || allotment.productSerialNumber.trim() === "") {
       errors.push("Product serial number is required")
     }
-  
+
     if (!allotment.organizationId) {
       errors.push("Organization ID is required")
     }
-  
-    if (!allotment.handoverDate) {
-      errors.push("Handover date is required")
-    }
-  
-    if (!allotment.monthlyRent || allotment.monthlyRent <= 0) {
-      errors.push("Valid monthly rent is required")
-    }
-  
+
+    // Allow missing handover date (backend will set default)
+    // if (!allotment.handoverDate) {
+    //   errors.push("Handover date is required")
+    // }
+
+    // Allow missing or zero monthly rent (backend will set default)
+    // if (!allotment.monthlyRent || allotment.monthlyRent <= 0) {
+    //   errors.push("Valid monthly rent is required")
+    // }
+
     if (allotment.contactEmail && !isValidEmail(allotment.contactEmail)) {
       errors.push("Invalid email format")
     }
-  
+
     return errors
   }
   

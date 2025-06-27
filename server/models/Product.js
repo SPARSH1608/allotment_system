@@ -16,21 +16,26 @@ const productSchema = new mongoose.Schema(
     },
     serialNumber: {
       type: String,
-      required: [true, "Serial number is required"],
-      unique: true,
+      required: false,
+      unique: false,
       trim: true,
       uppercase: true,
+      default: "0000",
     },
     company: {
       type: String,
       required: [true, "Company is required"],
-      enum: ["Lenovo", "Dell", "HP", "Apple", "Asus", "Acer", "Other"],
+      enum: [
+        "Lenovo", "Dell", "HP", "Apple", "Asus", "Acer", "Microsoft", "Samsung", "MSI", "Toshiba", "Fujitsu", "LG", "Sony", "Huawei", "Other"
+      ],
       trim: true,
     },
     processor: {
       type: String,
       required: [true, "Processor is required"],
-      enum: ["I3", "I5", "I7", "i9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "M1", "M2", "Other"],
+      enum: [
+        "I3", "I5", "I7", "I9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "Ryzen 9", "M1", "M2", "M3", "Pentium", "Celeron", "Core 2 Duo", "Xeon", "Other"
+      ],
       trim: true,
     },
     processorGen: {
@@ -42,25 +47,33 @@ const productSchema = new mongoose.Schema(
     ram: {
       type: String,
       required: [true, "RAM is required"],
-      enum: ["4GB", "8GB", "16GB", "32GB","20GB", "64GB"],
+      enum: [
+        "2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "20GB", "24GB", "32GB", "64GB", "128GB"
+      ],
       trim: true,
     },
     ssd: {
       type: String,
       required: [true, "SSD is required"],
-      enum: ["128GB", "256GB", "512GB", "1TB", "2TB"],
+      enum: [
+        "None", "64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB", "8TB"
+      ],
       trim: true,
     },
     hdd: {
       type: String,
-      enum: ["500GB", "1TB", "2TB", "None"],
+      enum: [
+        "None", "128GB", "256GB", "320GB", "500GB", "1TB", "2TB", "4TB"
+      ],
       default: "None",
       trim: true,
     },
     windowsVersion: {
       type: String,
       required: [true, "Windows version is required"],
-      enum: ["Win10", "Win11", "macOS", "Ubuntu", "Other","WIN10" ,"Mac OS"],
+      enum: [
+        "Win7", "Win8", "Win8.1", "Win10", "Win11", "macOS", "Ubuntu", "Fedora", "Debian", "Linux Mint", "Other", "WIN10", "Mac OS"
+      ],
       trim: true,
     },
     baseRent: {

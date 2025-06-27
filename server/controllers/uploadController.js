@@ -66,6 +66,11 @@ const uploadProducts = asyncHandler(async (req, res) => {
           baseRent: Number.parseFloat(row["Base Rent"] || row["Rent"] || row["Price"]) || 0,
         }
 
+        // Set serialNumber to "0000" if empty or missing
+        if (!productData.serialNumber || productData.serialNumber.trim() === "") {
+          productData.serialNumber = "0000"
+        }
+
         // Validate required fields
         if (!productData.id || !productData.model || !productData.serialNumber) {
           results.errors.push({
@@ -77,7 +82,7 @@ const uploadProducts = asyncHandler(async (req, res) => {
 
         // Check if product already exists
         const existingProduct = await Product.findOne({
-          $or: [{ id: productData.id }, { serialNumber: productData.serialNumber }],
+          $or: [{ id: productData.id }],
         })
 
         if (existingProduct) {

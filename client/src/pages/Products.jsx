@@ -49,13 +49,17 @@ console.log(products)
       await dispatch(updateProduct({ id: editProductData._id, productData: formData }))
       setIsEditModalOpen(false)
       setEditProductData(null)
+      // Fetch updated products list
+      dispatch(fetchProducts())
     }
   }
 
   // Delete Product
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      dispatch(deleteProduct(id))
+      dispatch(deleteProduct(id)).then(() => {
+        dispatch(fetchProducts()) // Refetch the list after deletion
+      })
     }
   }
 

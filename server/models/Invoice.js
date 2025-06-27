@@ -140,11 +140,7 @@ const organizationDetailsSchema = new mongoose.Schema({
     trim: true,
     uppercase: true,
   },
-  name: {
-    type: String,
-    required: [true, "Organization name is required"],
-    trim: true,
-  },
+ 
   location: {
     type: String,
     required: [true, "Location is required"],

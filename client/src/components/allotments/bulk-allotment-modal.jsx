@@ -76,7 +76,8 @@ export function BulkAllotmentModal({ isOpen, onClose, onSuccess }) {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
 
         if (jsonData.length > 0) {
-          const headers = jsonData[0]
+          // Filter out undefined/empty headers
+          const headers = jsonData[0].filter(h => typeof h === "string" && h.trim() !== "")
           const rows = jsonData.slice(1).filter((row) => row.some((cell) => cell !== undefined && cell !== ""))
 
           // Auto-detect field mappings

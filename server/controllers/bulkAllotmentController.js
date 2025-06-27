@@ -193,6 +193,21 @@ const parseRowData = (row, mappings, sheetName) => {
       data.CURRENT_MONTH_RENT = (data.RENT_PER_30_DAYS / 30) * data.CURRENT_MONTH_DAYS
     }
 
+    // Set serial number to "0000" if missing
+    if (!data.SERIAL_NUMBER || data.SERIAL_NUMBER.trim() === "") {
+      data.SERIAL_NUMBER = "0000"
+    }
+
+    // Set rent to 0 if missing
+    if (!data.RENT_PER_30_DAYS || isNaN(data.RENT_PER_30_DAYS)) {
+      data.RENT_PER_30_DAYS = 0
+    }
+
+    // Set handover date to today if missing
+    if (!data.HANDOVER_DATE || data.HANDOVER_DATE === "") {
+      data.HANDOVER_DATE = new Date()
+    }
+
     return { data, errors }
   } catch (error) {
     errors.push({
@@ -206,103 +221,43 @@ const parseRowData = (row, mappings, sheetName) => {
 // Validate allotment data
 const validateAllotmentData = async (data, rowIndex) => {
   const errors = []
-console.log("Validating allotment data for row:", rowIndex, data)
-  try {
-    // Required field validation
-    if (!data.LAPTOP_ID && !data.SERIAL_NUMBER) {
-      errors.push({
-        row: rowIndex,
-        field: "laptop_id",
-        error: "Either Laptop ID or Serial Number is required",
-      })
-    }
 
-    if (!data.ORGANIZATION_ID) {
-      errors.push({
-        row: rowIndex,
-        field: "organization_id",
-        error: "Organization ID is required",
-      })
-    }
-
-    // Validate laptop exists and is available
-    if (data.LAPTOP_ID || data.SERIAL_NUMBER) {
-      const laptopQuery = {}
-      if (data.LAPTOP_ID) laptopQuery.id = data.LAPTOP_ID
-      if (data.SERIAL_NUMBER) laptopQuery.serialNumber = data.SERIAL_NUMBER
-
-      const laptop = await Product.findOne(laptopQuery)
-      if (!laptop) {
-        errors.push({
-          row: rowIndex,
-          field: "laptop_id",
-          error: "Laptop not found in system",
-        })
-      } else if (laptop.status !== "Available") {
-        errors.push({
-          row: rowIndex,
-          field: "laptop_id",
-          error: `Laptop is currently ${laptop.status.toLowerCase()} and not available for allotment`,
-        })
-      }
-    }
-
-    // Validate organization exists
-    if (data.ORGANIZATION_ID) {
-      const organization = await Organization.findOne({ id: data.ORGANIZATION_ID })
-      if (!organization) {
-        errors.push({
-          row: rowIndex,
-          field: "organization_id",
-          error: "Organization not found in system",
-        })
-      }
-    }
-
-    // Validate dates
-    if (data.HANDOVER_DATE && isNaN(new Date(data.HANDOVER_DATE))) {
-      errors.push({
-        row: rowIndex,
-        field: "handover_date",
-        error: "Invalid handover date format",
-      })
-    }
-
-    if (data.SURRENDER_DATE && isNaN(new Date(data.SURRENDER_DATE))) {
-      errors.push({
-        row: rowIndex,
-        field: "surrender_date",
-        error: "Invalid surrender date format",
-      })
-    }
-
-    // Validate financial data
-    if (data.RENT_PER_30_DAYS && (isNaN(data.RENT_PER_30_DAYS) || data.RENT_PER_30_DAYS < 0)) {
-      errors.push({
-        row: rowIndex,
-        field: "rent_per_30_days",
-        error: "Invalid rent amount",
-      })
-    }
-
-    if (data.CURRENT_MONTH_DAYS && (data.CURRENT_MONTH_DAYS < 1 || data.CURRENT_MONTH_DAYS > 31)) {
-      errors.push({
-        row: rowIndex,
-        field: "current_month_days",
-        error: "Current month days must be between 1 and 31",
-      })
-    }
-
-    return errors
-  } catch (error) {
-    return [
-      {
-        row: rowIndex,
-        field: "validation",
-        error: `Validation error: ${error.message}`,
-      },
-    ]
+  // Serial number: allow "0000" as valid
+  if (
+    (!data.SERIAL_NUMBER || data.SERIAL_NUMBER.trim() === "") &&
+    (!data.LAPTOP_ID || data.LAPTOP_ID.trim() === "")
+  ) {
+    errors.push({
+      row: rowIndex,
+      field: "serial_number",
+      error: "Product serial number is required",
+    })
   }
+
+  // Handover date: allow missing (set default in processing)
+  // Remove this error if you want to allow missing handover date
+  // if (!data.HANDOVER_DATE || data.HANDOVER_DATE === "") {
+  //   errors.push({
+  //     row: rowIndex,
+  //     field: "handover_date",
+  //     error: "Handover date is required",
+  //   })
+  // }
+
+  // Monthly rent: allow missing or zero
+  // Remove this error if you want to allow missing rent
+  // if (
+  //   data.RENT_PER_30_DAYS === undefined || data.RENT_PER_30_DAYS === null || data.RENT_PER_30_DAYS === "" || isNaN(data.RENT_PER_30_DAYS)
+  // ) {
+  //   errors.push({
+  //     row: rowIndex,
+  //     field: "rent_per_30_days",
+  //     error: "Valid monthly rent is required",
+  //   })
+  // }
+
+  // ...rest of your validation...
+  return errors
 }
 
 // @desc    Preview bulk allotment data
@@ -500,7 +455,7 @@ console.log("Starting bulk allotment processing..." ,uploadData)
       }
  
       const laptop = await Product.findOne(laptopQuery)
-
+console.log("Laptop query:", laptopQuery, "Found laptop:", laptop)
       if (!laptop) {
         results.failedRecords++
         results.errors.push({
@@ -567,10 +522,15 @@ console.log("Starting bulk allotment processing..." ,uploadData)
       // Update laptop status
       await Product.findOneAndUpdate(
         { id: laptop.id },
-        {
-          status: "Allotted",
-          currentAllotmentId: allotment._id,
-        },
+        allotment.surrenderDate
+          ? {
+              status: "Available",
+              currentAllotmentId: null, // Remove currentAllotmentId if Available
+            }
+          : {
+              status: "Allotted",
+              currentAllotmentId: allotment._id,
+            }
       )
 
       // Update organization stats
