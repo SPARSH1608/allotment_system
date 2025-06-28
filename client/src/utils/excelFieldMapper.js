@@ -13,6 +13,10 @@ export const FIELD_MAPPINGS = {
       "un no",
       "unno",
       "un_no",
+      "Asset ID", // <-- Add this
+      "asset id",    // <-- Add this
+      "assetid",     // <-- Add this
+      "asset_id",    // <-- Add this
     ],
     MODEL: ["model", "model no", "modelno", "model_no", "model number", "make", "laptop model", "product model"],
     PROCESSOR: ["processor", "cpu", "processor type", "processor_type", "processortype"],
@@ -309,10 +313,10 @@ export const FIELD_MAPPINGS = {
   export function validateAllotmentData(allotment) {
     const errors = []
 
-    // Allow "0000" as a valid serial number
-    if (!allotment.productSerialNumber || allotment.productSerialNumber.trim() === "") {
-      errors.push("Product serial number is required")
-    }
+    // Remove or comment out this block:
+    // if (!allotment.productSerialNumber || allotment.productSerialNumber.trim() === "") {
+    //   errors.push("Product serial number is required")
+    // }
 
     if (!allotment.organizationId) {
       errors.push("Organization ID is required")

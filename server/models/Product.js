@@ -48,7 +48,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "RAM is required"],
       enum: [
-        "2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "20GB", "24GB", "32GB", "64GB", "128GB"
+        "2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "20GB", "24GB", "32GB","48GB", "64GB", "128GB"
       ],
       trim: true,
     },

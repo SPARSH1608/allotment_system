@@ -23,6 +23,45 @@ const upload = multer({
   },
 })
 
+// Field mappings for product and organization uploads
+const FIELD_MAPPINGS = {
+  id: ["asset id", "id", "assetid"],
+  model: ["model", "model no", "model number", "make"],
+  serialNumber: ["serial number", "serialnumber", "sn", "serial no"],
+  company: ["company", "brand", "manufacturer"],
+  processor: ["processor", "cpu"],
+  processorGen: ["processor generation", "gen", "generation"],
+  ram: ["ram", "memory"],
+  ssd: ["ssd"],
+  hdd: ["hdd"],
+  windowsVersion: ["os", "windows version", "operating system"],
+  baseRent: ["base rent", "rent", "price"],
+}
+
+// Helper to map row fields
+function mapRowFields(row) {
+  const mapped = {}
+  // Normalize row keys for flexible matching
+  const normalizedRow = {}
+  Object.keys(row).forEach(key => {
+    normalizedRow[key.toLowerCase().trim()] = row[key]
+  })
+
+  for (const [key, variations] of Object.entries(FIELD_MAPPINGS)) {
+    for (const v of variations) {
+      const normV = v.toLowerCase().trim()
+      if (normalizedRow[normV] !== undefined) {
+        mapped[key] = normalizedRow[normV]
+        break
+      }
+    }
+  }
+  // Fallbacks
+  if (!mapped.hdd && normalizedRow["hdd"]) mapped.hdd = normalizedRow["hdd"]
+  if (!mapped.ssd && normalizedRow["ssd"]) mapped.ssd = normalizedRow["ssd"]
+  return mapped
+}
+
 // @desc    Upload products from Excel file
 // @route   POST /api/upload/products
 // @access  Public
@@ -39,72 +78,65 @@ const uploadProducts = asyncHandler(async (req, res) => {
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" })
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
-    const data = XLSX.utils.sheet_to_json(worksheet)
-
+    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) // Get raw rows
+console.log("Parsed Excel data:", data);
+    const headers = data[0].map(h => h && h.toString().trim().toLowerCase())
+    const rows = data.slice(1).filter(
+      rowArr =>
+        Array.isArray(rowArr) &&
+        rowArr.some(cell => cell && String(cell).trim().length > 0)
+    )
+console.log("Headers:", headers); 
     const results = {
       success: [],
       errors: [],
-      total: data.length,
+      total: rows.length,
     }
 
     // Process each row
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i]
-      try {
-        // Map Excel columns to our schema
-        const productData = {
-          id: row["Asset ID"] || row["ID"] || row["AssetID"],
-          model: row["Model"] || row["Model No"],
-          serialNumber: row["Serial Number"] || row["SerialNumber"] || row["SN"],
-          company: row["Company"] || row["Brand"] || row["Manufacturer"],
-          processor: row["Processor"] || row["CPU"],
-          processorGen: row["Processor Generation"] || row["Gen"] || row["Generation"],
-          ram: row["RAM"] || row["Memory"],
-          ssd: row["SSD"] || row["Storage"],
-          hdd: row["HDD"] || "None",
-          windowsVersion: row["OS"] || row["Windows Version"] || row["Operating System"],
-          baseRent: Number.parseFloat(row["Base Rent"] || row["Rent"] || row["Price"]) || 0,
-        }
-
-        // Set serialNumber to "0000" if empty or missing
-        if (!productData.serialNumber || productData.serialNumber.trim() === "") {
-          productData.serialNumber = "0000"
-        }
-
-        // Validate required fields
-        if (!productData.id || !productData.model || !productData.serialNumber) {
-          results.errors.push({
-            row: i + 1,
-            error: "Missing required fields (Asset ID, Model, Serial Number)",
-          })
-          continue
-        }
-
-        // Check if product already exists
-        const existingProduct = await Product.findOne({
-          $or: [{ id: productData.id }],
-        })
-
-        if (existingProduct) {
-          results.errors.push({
-            row: i + 1,
-            error: `Product with ID ${productData.id} or Serial Number ${productData.serialNumber} already exists`,
-          })
-          continue
-        }
-
-        // Create product
-        const product = await Product.create(productData)
-        results.success.push({
-          row: i + 1,
-          product, 
-        })
-      } catch (error) {
+    for (let i = 0; i < rows.length; i++) {
+      const rowArr = rows[i]
+      const row = {}
+      headers.forEach((header, idx) => {
+        row[header] = rowArr[idx]
+      })
+console.log('map row field')
+      // Now use lowercase keys for mapping:
+      const productData = mapRowFields(row)
+      productData.baseRent = Number.parseFloat(productData.baseRent) || 0
+      if (!productData.hdd) productData.hdd = "None"
+      if (!productData.serialNumber || productData.serialNumber.trim() === "") {
+        productData.serialNumber = "0000"
+      }
+console.log("Processing product data:", productData);
+      // Validate required fields
+      if (!productData.id || !productData.model || !productData.serialNumber) {
         results.errors.push({
           row: i + 1,
-          error: error.message,
+          error: "Missing required fields (Asset ID, Model, Serial Number)",
         })
+        continue
       }
+
+      // Check if product already exists
+      const existingProduct = await Product.findOne({
+        id: productData.id,
+      })
+      
+      if (existingProduct) {
+        results.errors.push({
+          row: i + 1,
+          error: `Product with ID ${productData.id} already exists`,
+        })
+        continue
+      }
+
+      // Create product
+      const product = await Product.create(productData)
+      results.success.push({
+        row: i + 1,
+        product, 
+      })
     }
 
     res.status(200).json({
