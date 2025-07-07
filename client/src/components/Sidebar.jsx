@@ -35,7 +35,7 @@ export function Sidebar({ collapsed, setCollapsed }) {
       <div className="flex flex-col h-full">
         <div className="flex items-center h-16 px-6 border-b border-gray-200 justify-between">
           <h1 className={`text-xl font-semibold text-gray-900 transition-all duration-200 ${collapsed ? "hidden" : "block"}`}>
-            LaptopRent
+            Universal Network
           </h1>
           {typeof setCollapsed === "function" && (
             <button

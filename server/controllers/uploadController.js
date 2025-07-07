@@ -145,6 +145,7 @@ console.log("Processing product data:", productData);
       data: results,
     })
   } catch (error) {
+    console.error("Excel upload error:", error); // <-- Add this line
     res.status(400).json({
       success: false,
       message: "Error processing Excel file",

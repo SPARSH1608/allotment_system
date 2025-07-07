@@ -19,7 +19,7 @@ const SettingsPage = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="company-name">Company Name</Label>
-              <Input id="company-name" defaultValue="LaptopRent" />
+              <Input id="company-name" defaultValue="Universal Network" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="currency">Default Currency</Label>

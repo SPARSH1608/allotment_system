@@ -38,7 +38,10 @@ connectDB();
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:4000",
+    origin: [,
+      "https://allotment-system-five.vercel.app",
+      process.env.CLIENT_URL || "http://localhost:5173"
+    ],
     credentials: true,
   }),
 )
