@@ -1,6 +1,6 @@
 // Base API configuration
 // For Vite projects, use import.meta.env; for CRA, use process.env
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://allotment-system-0kbc.onrender.com"
+const API_BASE_URL = "https://allotment-system-five.vercel.app"
 console.log("API Base URL:", API_BASE_URL)
 class ApiService {
   constructor() {
