@@ -40,6 +40,7 @@ app.use(
   cors({
     origin: [,
       "https://allotmentsystem-ec5rk6xnl-sparsh1608s-projects.vercel.app",
+      "https://allotmentsystem.vercel.app/",
       process.env.CLIENT_URL || "http://localhost:5173"
     ],
     credentials: true,
