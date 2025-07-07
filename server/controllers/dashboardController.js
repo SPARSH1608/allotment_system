@@ -271,7 +271,7 @@ const getOrganizationDistribution = asyncHandler(async (req, res) => {
     {
       $project: {
         _id: 0,
-        organizationId: "$organization._id", // Include organization ID
+        organizationId: "$organization.id", // Include organization ID
         organizationName: "$organization.name",
         laptopCount: 1,
         totalRevenue: 1
