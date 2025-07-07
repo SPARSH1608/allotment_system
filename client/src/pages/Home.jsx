@@ -15,7 +15,7 @@ const Home = () => {
         </div>
       ) : (
         <div>
-          <h1 className="text-2xl font-bold mb-4">Welcome to LaptopRent!</h1>
+          <h1 className="text-2xl font-bold mb-4">Welcome to Universal Network!</h1>
           <p>
             <Link to="/login" className="text-blue-600">Login</Link> or{" "}
             <Link to="/register" className="text-blue-600">Register</Link> to get started.

@@ -15,18 +15,17 @@ import { organizationService } from "../services/organizationService"
 import { productService } from "../services/productService"
 
 const defaultCompanyDetails = {
-  name: "TechRent Solutions Pvt Ltd",
-  address: "123 Business Park, Tech City, State - 123456",
-  mobileNumber: "+91-9876543210",
-  gstin: "29ABCDE1234F1Z5",
+  name: "Universal Networks",
+  address: "D-3/249, SHOP NO.- 3 AND 4, MAHAVIR ENCLAVE, DWARKA SECTOR-1A, NASIRPUR VILLAGE, South West Delhi, Delhi - 110045",
+  mobileNumber: "+91-8750660004/02",
+  gstin: "07CKKPS8080E1ZQ",
   bankDetails: {
-    bankName: "State Bank of India",
-    bankAddress: "Main Branch, Tech City",
-    accountNumber: "1234567890123456",
-    ifscCode: "SBIN0001234",
+    bankName: "UNION BANK OF INDIA",
+    bankAddress: "PALAM BRANCH, NEW DELHI - 110045",
+    accountNumber: "510101005170515",
+    ifscCode: "ubin0904520",
   },
 }
-
 export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
   const dispatch = useDispatch()
   const [currentStep, setCurrentStep] = useState(1)

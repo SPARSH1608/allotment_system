@@ -72,7 +72,7 @@ const DashboardPage = () => {
   // Organization Distribution Pie Data
   const distributionData = distribution
     ? {
-      labels: distribution.map((org) => org.organizationName),
+      labels: distribution.map((org) => org.organizationId),
       datasets: [
         {
           data: distribution.map((org) => org.laptopCount),
