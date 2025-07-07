@@ -248,78 +248,7 @@ const getAllotmentTrends = asyncHandler(async (req, res) => {
 // @route   GET /api/dashboard/organization-distribution
 // @access  Public
 const getOrganizationDistribution = asyncHandler(async (req, res) => {
-  // Step 1: Match only active/extended allotments
-  const matchedAllotments = await Allotment.aggregate([
-    {
-      $match: { status: { $in: ["Active", "Extended"] } }
-    }
-  ])
-  console.log("Step 1 - Matched Allotments:", matchedAllotments.length)
-
-  // Step 2: Group by organizationId and sum laptopCount + revenue
   const groupedData = await Allotment.aggregate([
-    {
-      $match: { status: { $in: ["Active", "Extended"] } }
-    },
-    {
-      $group: {
-        _id: "$organizationId",
-        laptopCount: { $sum: 1 },
-        totalRevenue: { $sum: "$currentMonthRent" }
-      }
-    }
-  ])
-  console.log("Step 2 - Grouped by Org:", groupedData)
-
-  // Step 3: Lookup organization details
-  const withOrgDetails = await Allotment.aggregate([
-    {
-      $match: { status: { $in: ["Active", "Extended"] } }
-    },
-    {
-      $group: {
-        _id: "$organizationId",
-        laptopCount: { $sum: 1 },
-        totalRevenue: { $sum: "$currentMonthRent" }
-      }
-    },
-    {
-      $lookup: {
-        from: "organizations",        // Make sure this matches your Mongo collection name
-        localField: "_id",
-        foreignField: "id",           // Change to "_id" if needed
-        as: "organization"
-      }
-    }
-  ])
-  console.log("Step 3 - After $lookup:", withOrgDetails)
-
-  // Step 4: Unwind organization array
-  const unwound = await Allotment.aggregate([
-    {
-      $match: { status: { $in: ["Active", "Extended"] } }
-    },
-    {
-      $group: {
-        _id: "$organizationId",
-        laptopCount: { $sum: 1 },
-        totalRevenue: { $sum: "$currentMonthRent" }
-      }
-    },
-    {
-      $lookup: {
-        from: "organizations",
-        localField: "_id",
-        foreignField: "id",
-        as: "organization"
-      }
-    },
-    { $unwind: "$organization" }
-  ])
-  console.log("Step 4 - After $unwind:", unwound)
-
-  // Final aggregation with projection and sorting
-  const distribution = await Allotment.aggregate([
     {
       $match: { status: { $in: ["Active", "Extended"] } }
     },
@@ -341,20 +270,18 @@ const getOrganizationDistribution = asyncHandler(async (req, res) => {
     { $unwind: "$organization" },
     {
       $project: {
+        _id: 0,
         organizationName: "$organization.name",
         laptopCount: 1,
         totalRevenue: 1
       }
-    },
-    { $sort: { laptopCount: -1 } },
-    { $limit: 10 }
-  ])
-  console.log("Final Output - Top 10 orgs:", distribution)
+    }
+  ]);
 
   res.status(200).json({
     success: true,
-    data: distribution
-  })
+    data: groupedData
+  });
 })
 
 
