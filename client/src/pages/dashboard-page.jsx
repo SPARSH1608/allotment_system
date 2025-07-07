@@ -72,10 +72,10 @@ const DashboardPage = () => {
   // Organization Distribution Pie Data
   const distributionData = distribution
     ? {
-      labels: distribution.map((org) => org.organizationId),
+      labels: distribution.map((org) => org.organizationId || "Unknown"), // Fallback to "Unknown" if organizationId is missing
       datasets: [
         {
-          data: distribution.map((org) => org.laptopCount),
+          data: distribution.map((org) => org.laptopCount || 0), // Fallback to 0 if laptopCount is missing
           backgroundColor: [
             "#6366f1",
             "#f472b6",
