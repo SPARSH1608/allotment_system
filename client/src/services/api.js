@@ -2,7 +2,7 @@ import axios from "axios"
 
 // Base API configuration
 // For Vite projects, use import.meta.env; for CRA, use process.env
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL  || "http://localhost:4000/api"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL  || "https://allotment-system-0kbc.onrender.com/api"
 console.log("API Base URL:", API_BASE_URL)
 class ApiService {
   constructor() {
