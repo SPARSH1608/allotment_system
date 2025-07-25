@@ -174,3 +174,24 @@
   margin-left: 4rem; /* 64px */
   transition: margin-left 0.2s;
 }
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar.expanded {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    height: 100vh;
+  }
+  .sidebar.collapsed {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .main-content.expanded,
+  .main-content.collapsed {
+    margin-left: 0;
+  }
+}

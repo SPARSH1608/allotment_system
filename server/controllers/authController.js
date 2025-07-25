@@ -35,7 +35,7 @@ const register = asyncHandler(async (req, res) => {
 // @access  Public
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body
-
+console.log("Login attempt with email:", email)
   // Validate email & password
   if (!email || !password) {
     return res.status(400).json({

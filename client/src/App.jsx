@@ -22,16 +22,25 @@ function PrivateRoute({ children }) {
 }
 
 function App() {
-  const isAuthenticated = useIsAuthenticated()
-  const [collapsed, setCollapsed] = useState(false)
+  const isAuthenticated = useIsAuthenticated();
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <Router>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex flex-col sm:flex-row min-h-screen bg-gray-50">
+        {/* Sidebar only visible for authenticated users */}
         {isAuthenticated && (
-          <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+          <Sidebar
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            className="hidden sm:block" // Hide Sidebar on mobile
+          />
         )}
-        <div className={`main-content ${collapsed ? "collapsed" : "expanded"} flex-1`}>
+        <div
+          className={`${
+            isAuthenticated ? `main-content ${collapsed ? "collapsed" : "expanded"}` : ""
+          } flex-1`}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -110,7 +119,7 @@ function App() {
         </div>
       </div>
     </Router>
-  )
+  );
 }
 
 export default App

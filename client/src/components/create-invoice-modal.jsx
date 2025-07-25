@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useMemo } from "react"
-import { useDispatch } from "react-redux"
-import { createInvoice, fetchInvoices } from "../store/slices/invoiceSlice"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import { Label } from "./ui/label"
-import { Modal } from "./ui/modal"
-import { Select, SelectItem } from "./ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { Badge } from "./ui/badge"
-import { Plus, Building, User, Phone, Mail, MapPin, CreditCard, Search, X } from "lucide-react"
-import { organizationService } from "../services/organizationService"
-import { productService } from "../services/productService"
+import { useEffect, useState, useMemo } from "react";
+import { useDispatch } from "react-redux";
+import { createInvoice, fetchInvoices } from "../store/slices/invoiceSlice";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Modal } from "./ui/modal";
+import { Select, SelectItem } from "./ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Plus, Building, User, Phone, Mail, MapPin, CreditCard, Search, X } from "lucide-react";
+import { organizationService } from "../services/organizationService";
+import { productService } from "../services/productService";
 
 const defaultCompanyDetails = {
   name: "Universal Networks",
@@ -25,15 +25,16 @@ const defaultCompanyDetails = {
     accountNumber: "510101005170515",
     ifscCode: "ubin0904520",
   },
-}
+};
+
 export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
-  const dispatch = useDispatch()
-  const [currentStep, setCurrentStep] = useState(1)
-  const [productSearchTerm, setProductSearchTerm] = useState("")
-  const [organizations, setOrganizations] = useState([])
-  const [products, setProducts] = useState([])
-  const [loadingOrgs, setLoadingOrgs] = useState(false)
-  const [loadingProducts, setLoadingProducts] = useState(false)
+  const dispatch = useDispatch();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [organizations, setOrganizations] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [formData, setFormData] = useState({
     organizationId: "",
     invoiceDate: new Date().toISOString().split("T")[0],
@@ -43,63 +44,63 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
     cgstRate: 9,
     notes: "",
     companyDetails: defaultCompanyDetails,
-  })
-  const [selectedOrganization, setSelectedOrganization] = useState(null)
+  });
+  const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [calculations, setCalculations] = useState({
     subtotal: 0,
     sgstAmount: 0,
     cgstAmount: 0,
     totalTaxAmount: 0,
     grandTotal: 0,
-  })
+  });
   const [bankDetails, setBankDetails] = useState({
     bankName: "",
     bankAddress: "",
     accountNumber: "",
     ifscCode: "",
-  })
+  });
 
   // Fetch organizations and products on mount
   useEffect(() => {
-    setLoadingOrgs(true)
-    organizationService.getOrganizations()
+    setLoadingOrgs(true);
+    organizationService
+      .getOrganizations()
       .then((res) => setOrganizations(res.data || []))
-      .finally(() => setLoadingOrgs(false))
+      .finally(() => setLoadingOrgs(false));
 
-    setLoadingProducts(true)
-    productService.getProducts()
+    setLoadingProducts(true);
+    productService
+      .getProducts()
       .then((res) => setProducts(res.data || []))
-      .finally(() => setLoadingProducts(false))
-  }, [])
+      .finally(() => setLoadingProducts(false));
+  }, []);
 
   // Product search (client-side filtering)
   const filteredProducts = useMemo(() => {
-    const selectedIds = formData.selectedProducts.map((p) => p.productId)
+    const selectedIds = formData.selectedProducts.map((p) => p.productId);
     if (!productSearchTerm) {
-      return products.filter((p) => !selectedIds.includes(p.id))
+      return products.filter((p) => !selectedIds.includes(p.id));
     }
-    const term = productSearchTerm.toLowerCase()
+    const term = productSearchTerm.toLowerCase();
     return products.filter(
       (p) =>
         !selectedIds.includes(p.id) &&
-        (
-          (p.id && p.id.toLowerCase().includes(term)) ||
+        ((p.id && p.id.toLowerCase().includes(term)) ||
           (p.name && p.name.toLowerCase().includes(term)) ||
-          (p.company && p.company.toLowerCase().includes(term))
-        )
-    )
-  }, [products, productSearchTerm, formData.selectedProducts])
+          (p.company && p.company.toLowerCase().includes(term)))
+    );
+  }, [products, productSearchTerm, formData.selectedProducts]);
 
   useEffect(() => {
-    calculateTotals()
-  }, [formData.selectedProducts, formData.sgstRate, formData.cgstRate])
+    calculateTotals();
+  }, [formData.selectedProducts, formData.sgstRate, formData.cgstRate]);
 
   useEffect(() => {
     if (formData.organizationId) {
-      const org = organizations.find((o) => o.id === formData.organizationId)
-      setSelectedOrganization(org)
+      const org = organizations.find((o) => o.id === formData.organizationId);
+      setSelectedOrganization(org);
     }
-  }, [formData.organizationId, organizations])
+  }, [formData.organizationId, organizations]);
 
   useEffect(() => {
     if (formData.companyDetails && formData.companyDetails.bankDetails) {
@@ -108,20 +109,19 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
         bankAddress: formData.companyDetails.bankDetails.bankAddress || "",
         accountNumber: formData.companyDetails.bankDetails.accountNumber || "",
         ifscCode: formData.companyDetails.bankDetails.ifscCode || "",
-      })
+      });
     }
-  }, [formData.companyDetails])
+  }, [formData.companyDetails]);
 
   const calculateTotals = () => {
-    // Subtotal is now just quantity * ratePerDay for each product (no date calculation)
     const subtotal = formData.selectedProducts.reduce((sum, product) => {
-      return sum + (product.quantity * product.ratePerDay)
-    }, 0)
+      return sum + product.quantity * product.ratePerDay;
+    }, 0);
 
-    const sgstAmount = (subtotal * formData.sgstRate) / 100
-    const cgstAmount = (subtotal * formData.cgstRate) / 100
-    const totalTaxAmount = sgstAmount + cgstAmount
-    const grandTotal = subtotal + totalTaxAmount
+    const sgstAmount = (subtotal * formData.sgstRate) / 100;
+    const cgstAmount = (subtotal * formData.cgstRate) / 100;
+    const totalTaxAmount = sgstAmount + cgstAmount;
+    const grandTotal = subtotal + totalTaxAmount;
 
     setCalculations({
       subtotal,
@@ -129,12 +129,12 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
       cgstAmount,
       totalTaxAmount,
       grandTotal,
-    })
-  }
+    });
+  };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const addProduct = () => {
     setFormData((prev) => ({
@@ -149,179 +149,38 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
           ratePerDay: 0,
         },
       ],
-    }))
-  }
+    }));
+  };
 
   const removeProduct = (index) => {
     setFormData((prev) => ({
       ...prev,
       selectedProducts: prev.selectedProducts.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const updateProduct = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
       selectedProducts: prev.selectedProducts.map((product, i) => {
         if (i === index) {
-          const updatedProduct = { ...product, [field]: value }
+          const updatedProduct = { ...product, [field]: value };
           if (field === "productId") {
-            const selectedProduct = products.find((p) => p.id === value)
+            const selectedProduct = products.find((p) => p.id === value);
             if (selectedProduct) {
-              updatedProduct.ratePerDay = selectedProduct.baseRent
+              updatedProduct.ratePerDay = selectedProduct.baseRent;
             }
           }
-          return updatedProduct
+          return updatedProduct;
         }
-        return product
+        return product;
       }),
-    }))
-  }
+    }));
+  };
 
   const handleBankDetailsChange = (field, value) => {
-    setBankDetails((prev) => ({ ...prev, [field]: value }))
-  }
-
-  // Convert number to words (for preview)
-  const convertNumberToWords = (amount) => {
-    const ones = [
-      "",
-      "One",
-      "Two",
-      "Three",
-      "Four",
-      "Five",
-      "Six",
-      "Seven",
-      "Eight",
-      "Nine",
-      "Ten",
-      "Eleven",
-      "Twelve",
-      "Thirteen",
-      "Fourteen",
-      "Fifteen",
-      "Sixteen",
-      "Seventeen",
-      "Eighteen",
-      "Nineteen",
-    ]
-
-    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
-
-    if (amount === 0) return "Zero Rupees Only"
-
-    const convertHundreds = (num) => {
-      let result = ""
-
-      if (num > 99) {
-        result += ones[Math.floor(num / 100)] + " Hundred "
-        num %= 100
-      }
-
-      if (num > 19) {
-        result += tens[Math.floor(num / 10)] + " "
-        num %= 10
-      }
-
-      if (num > 0) {
-        result += ones[num] + " "
-      }
-
-      return result
-    }
-
-    let rupees = Math.floor(amount)
-    let result = ""
-
-    if (rupees >= 10000000) {
-      const crores = Math.floor(rupees / 10000000)
-      result += convertHundreds(crores) + "Crore "
-      rupees %= 10000000
-    }
-
-    if (rupees >= 100000) {
-      const lakhs = Math.floor(rupees / 100000)
-      result += convertHundreds(lakhs) + "Lakh "
-      rupees %= 100000
-    }
-
-    if (rupees >= 1000) {
-      const thousands = Math.floor(rupees / 1000)
-      result += convertHundreds(thousands) + "Thousand "
-      rupees %= 1000
-    }
-
-    if (rupees > 0) {
-      result += convertHundreds(rupees)
-    }
-
-    result += "Rupees Only"
-    return result.trim()
-  }
-
-  // Prefill bank details from companyDetails on mount or when companyDetails changes
-  useEffect(() => {
-    if (formData.companyDetails && formData.companyDetails.bankDetails) {
-      setBankDetails({
-        bankName: formData.companyDetails.bankDetails.bankName || "",
-        bankAddress: formData.companyDetails.bankDetails.bankAddress || "",
-        accountNumber: formData.companyDetails.bankDetails.accountNumber || "",
-        ifscCode: formData.companyDetails.bankDetails.ifscCode || "",
-      })
-    }
-  }, [formData.companyDetails])
-
-  // Prefill organization and products when modal opens
-  useEffect(() => {
-    if (isOpen && invoice) {
-      setFormData({
-        organizationId: invoice.organizationDetails?.id || "",
-        invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split("T")[0] : "",
-        dueDate: invoice.dueDate ? invoice.dueDate.split("T")[0] : "",
-        selectedProducts: invoice.items
-          ? invoice.items.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              startDate: item.startDate ? item.startDate.split("T")[0] : "",
-              endDate: item.endDate ? item.endDate.split("T")[0] : "",
-              ratePerDay: item.ratePerDay,
-            }))
-          : [],
-        sgstRate: invoice.sgstRate ?? 9,
-        cgstRate: invoice.cgstRate ?? 9,
-        notes: invoice.notes || "",
-        companyDetails: invoice.companyDetails || defaultCompanyDetails,
-      })
-      setBankDetails(invoice.companyDetails?.bankDetails || {
-        bankName: "",
-        bankAddress: "",
-        accountNumber: "",
-        ifscCode: "",
-      })
-      setCurrentStep(1)
-    }
-    // If creating new, reset form
-    if (isOpen && !invoice) {
-      setFormData({
-        organizationId: "",
-        invoiceDate: new Date().toISOString().split("T")[0],
-        dueDate: "",
-        selectedProducts: [],
-        sgstRate: 9,
-        cgstRate: 9,
-        notes: "",
-        companyDetails: defaultCompanyDetails,
-      })
-      setBankDetails({
-        bankName: "",
-        bankAddress: "",
-        accountNumber: "",
-        ifscCode: "",
-      })
-      setCurrentStep(1)
-    }
-  }, [isOpen, invoice])
+    setBankDetails((prev) => ({ ...prev, [field]: value }));
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -329,13 +188,13 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">Organization & Invoice Details</h3>
-              <p className="text-sm text-gray-600 mt-2">Select organization and set invoice dates</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Organization & Invoice Details</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">Select organization and set invoice dates</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <Label htmlFor="organizationId" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="organizationId" className="text-xs sm:text-sm font-medium text-gray-700">
                   Organization *
                 </Label>
                 <Select
@@ -358,7 +217,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="invoiceDate" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="invoiceDate" className="text-xs sm:text-sm font-medium text-gray-700">
                   Invoice Date *
                 </Label>
                 <Input
@@ -366,14 +225,14 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                   type="date"
                   value={formData.invoiceDate}
                   onChange={(e) => handleInputChange("invoiceDate", e.target.value)}
-                  className="w-full"
+                  className="w-full text-xs sm:text-sm"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="dueDate" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="dueDate" className="text-xs sm:text-sm font-medium text-gray-700">
                 Due Date *
               </Label>
               <Input
@@ -381,60 +240,19 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                className="w-full"
+                className="w-full text-xs sm:text-sm"
                 required
               />
             </div>
-
-            {selectedOrganization && (
-              <Card className="border-2 border-blue-100 bg-blue-50/50">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Building className="w-5 h-5 text-blue-600" />
-                    Organization Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">{selectedOrganization.contactPerson}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm">{selectedOrganization.contactEmail}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm">{selectedOrganization.contactPhone}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
-                        <span className="text-sm">{selectedOrganization.location}</span>
-                      </div>
-                      {selectedOrganization.gstin && (
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-mono">GSTIN: {selectedOrganization.gstin}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
-        )
+        );
 
       case 2:
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">Products & Services</h3>
-              <p className="text-sm text-gray-600 mt-2">Add products with quantity and rental duration</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Products & Services</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">Add products with quantity and rental duration</p>
             </div>
 
             {/* Global Product Search */}
@@ -476,8 +294,8 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                         className="flex items-center justify-between px-4 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
                         onClick={() => {
                           // Add product to selectedProducts if not already added
-                          if (!formData.selectedProducts.some(p => p.productId === prod.id)) {
-                            setFormData(prev => ({
+                          if (!formData.selectedProducts.some((p) => p.productId === prod.id)) {
+                            setFormData((prev) => ({
                               ...prev,
                               selectedProducts: [
                                 ...prev.selectedProducts,
@@ -489,7 +307,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                                   ratePerDay: prod.baseRent, // Set default to baseRent
                                 },
                               ],
-                            }))
+                            }));
                           }
                         }}
                       >
@@ -611,7 +429,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                     {product.productId && (
                       <div className="bg-gray-50 p-4 rounded-lg">
                         {(() => {
-                          const selectedProd = products.find((p) => p.id === product.productId)
+                          const selectedProd = products.find((p) => p.id === product.productId);
                           return selectedProd ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
@@ -637,7 +455,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                                 </p>
                               </div>
                             </div>
-                          ) : null
+                          ) : null;
                         })()}
                       </div>
                     )}
@@ -714,15 +532,15 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
               </Card>
             )}
           </div>
-        )
+        );
 
       case 3:
         // Bank Details Entry Step
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">Bank Details</h3>
-              <p className="text-sm text-gray-600 mt-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Bank Details</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">
                 Enter or confirm the bank details for payment. These will appear on the invoice.
               </p>
             </div>
@@ -736,7 +554,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                     <Label>Bank Name</Label>
                     <Input
                       value={bankDetails.bankName}
-                      onChange={e => handleBankDetailsChange("bankName", e.target.value)}
+                      onChange={(e) => handleBankDetailsChange("bankName", e.target.value)}
                       placeholder="Bank Name"
                     />
                   </div>
@@ -744,7 +562,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                     <Label>Bank Address</Label>
                     <Input
                       value={bankDetails.bankAddress}
-                      onChange={e => handleBankDetailsChange("bankAddress", e.target.value)}
+                      onChange={(e) => handleBankDetailsChange("bankAddress", e.target.value)}
                       placeholder="Bank Address"
                     />
                   </div>
@@ -752,7 +570,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                     <Label>Account Number</Label>
                     <Input
                       value={bankDetails.accountNumber}
-                      onChange={e => handleBankDetailsChange("accountNumber", e.target.value)}
+                      onChange={(e) => handleBankDetailsChange("accountNumber", e.target.value)}
                       placeholder="Account Number"
                     />
                   </div>
@@ -760,7 +578,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                     <Label>IFSC Code</Label>
                     <Input
                       value={bankDetails.ifscCode}
-                      onChange={e => handleBankDetailsChange("ifscCode", e.target.value)}
+                      onChange={(e) => handleBankDetailsChange("ifscCode", e.target.value)}
                       placeholder="IFSC Code"
                     />
                   </div>
@@ -768,15 +586,15 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
               </CardContent>
             </Card>
           </div>
-        )
+        );
 
       case 4:
         // Invoice Preview Step (use bankDetails from state)
         return (
           <div className="space-y-8">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900">Invoice Preview</h3>
-              <p className="text-sm text-gray-600 mt-2">Review all details before creating the invoice</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Invoice Preview</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-2">Review all details before creating the invoice</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -833,7 +651,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                     </thead>
                     <tbody>
                       {formData.selectedProducts.map((product, index) => {
-                        const selectedProduct = products.find((p) => p.id === product.productId)
+                        const selectedProduct = products.find((p) => p.id === product.productId);
                         return (
                           <tr key={index} className="border-b border-gray-100">
                             <td className="p-3">
@@ -854,7 +672,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                               ₹{(product.quantity * product.ratePerDay).toLocaleString()}
                             </td>
                           </tr>
-                        )
+                        );
                       })}
                     </tbody>
                   </table>
@@ -934,22 +752,28 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
               />
             </div>
           </div>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   // Navigation logic: update step count and button logic
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Invoice" size="2xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New Invoice"
+      size="2xl"
+      className="sm:max-w-2xl sm:h-auto h-screen overflow-y-auto"
+    >
       <form
-        onSubmit={async e => {
-          e.preventDefault()
+        onSubmit={async (e) => {
+          e.preventDefault();
           if (currentStep < 4) {
-            setCurrentStep(currentStep + 1)
-            return
+            setCurrentStep(currentStep + 1);
+            return;
           }
           // Prepare invoice data for API
           const invoiceData = {
@@ -959,10 +783,10 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
             items: formData.selectedProducts.map((p) => ({
               productId: p.productId,
               description: (() => {
-                const prod = products.find(prod => prod.id === p.productId)
+                const prod = products.find((prod) => prod.id === p.productId);
                 return prod
                   ? `${prod.company} ${prod.model || prod.name} - ${prod.processor} ${prod.ram}GB RAM ${prod.ssd}GB SSD`
-                  : ""
+                  : "";
               })(),
               quantity: p.quantity,
               startDate: p.startDate,
@@ -982,11 +806,11 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
               ...formData.companyDetails,
               bankDetails: { ...bankDetails },
             },
-          }
+          };
           // Dispatch createInvoice thunk
-          await dispatch(createInvoice(invoiceData))
+          await dispatch(createInvoice(invoiceData));
           // Optionally refresh invoice list
-          dispatch(fetchInvoices())
+          dispatch(fetchInvoices());
           // Clear the form after submission
           setFormData({
             organizationId: "",
@@ -997,24 +821,24 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
             cgstRate: 9,
             notes: "",
             companyDetails: defaultCompanyDetails,
-          })
-          setCurrentStep(1)
+          });
+          setCurrentStep(1);
           setBankDetails({
             bankName: "",
             bankAddress: "",
             accountNumber: "",
             ifscCode: "",
-          })
-          setSelectedOrganization(null)
+          });
+          setSelectedOrganization(null);
           setCalculations({
             subtotal: 0,
             sgstAmount: 0,
             cgstAmount: 0,
             totalTaxAmount: 0,
             grandTotal: 0,
-          })
-          setProductSearchTerm("")
-          onClose()
+          });
+          setProductSearchTerm("");
+          onClose();
         }}
         className="space-y-8"
       >
@@ -1023,7 +847,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
           {[1, 2, 3, 4].map((step) => (
             <div key={step} className="flex items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-colors ${
                   step <= currentStep ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-600"
                 }`}
               >
@@ -1038,17 +862,18 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
           ))}
         </div>
 
-        <div className="min-h-[600px]">{renderStepContent()}</div>
+        {/* Full-Screen Step Content */}
+        <div className="min-h-[600px] sm:min-h-auto h-screen overflow-y-auto px-4">{renderStepContent()}</div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6 border-t-2 border-gray-100">
+        <div className="flex justify-between pt-6 border-t-2 border-gray-100 px-4">
           <div>
             {currentStep > 1 && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setCurrentStep(currentStep - 1)}
-                className="px-6 py-2"
+                className="px-6 py-2 text-xs sm:text-sm"
               >
                 Previous
               </Button>
@@ -1056,7 +881,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
           </div>
 
           <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={onClose} className="px-6 py-2">
+            <Button type="button" variant="outline" onClick={onClose} className="px-6 py-2 text-xs sm:text-sm">
               Cancel
             </Button>
             {currentStep < 4 ? (
@@ -1067,12 +892,12 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
                   (currentStep === 2 && formData.selectedProducts.length === 0) ||
                   (currentStep === 3 && (!bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.ifscCode))
                 }
-                className="px-6 py-2"
+                className="px-6 py-2 text-xs sm:text-sm"
               >
                 Next
               </Button>
             ) : (
-              <Button type="submit" className="px-6 py-2 bg-green-600 hover:bg-green-700">
+              <Button type="submit" className="px-6 py-2 text-xs sm:text-sm bg-green-600 hover:bg-green-700">
                 Create Invoice
               </Button>
             )}
@@ -1080,7 +905,7 @@ export function CreateInvoiceModal({ isOpen, onClose, invoice }) {
         </div>
       </form>
     </Modal>
-  )
+  );
 }
 
-export default CreateInvoiceModal
+export default CreateInvoiceModal;

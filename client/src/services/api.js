@@ -1,10 +1,18 @@
+import axios from "axios"
+
 // Base API configuration
 // For Vite projects, use import.meta.env; for CRA, use process.env
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL  || "http://localhost:4000/api"
 console.log("API Base URL:", API_BASE_URL)
 class ApiService {
   constructor() {
-    this.baseURL = API_BASE_URL
+    this.client = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    })
   }
 
   // Get auth token
@@ -12,11 +20,9 @@ class ApiService {
     return localStorage.getItem("token")
   }
 
-  // Get default header
+  // Get default headers
   getHeaders(includeAuth = true) {
-    const headers = {
-      "Content-Type": "application/json",
-    }
+    const headers = {}
 
     if (includeAuth) {
       const token = this.getToken()
@@ -30,47 +36,30 @@ class ApiService {
 
   // Generic request method
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`
-    const config = {
-      headers: this.getHeaders(options.auth !== false),
-      credentials: "include",
-      ...options,
-    }
-
     try {
-      const response = await fetch(url, config)
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`)
-      }
-
-      return data
+      const response = await this.client.request({
+        url: endpoint,
+        headers: this.getHeaders(options.auth !== false),
+        ...options,
+      })
+      return response.data
     } catch (error) {
       console.error(`API Error [${endpoint}]:`, error)
-      throw error
+      throw error.response?.data || error.message
     }
   }
 
   // HTTP methods
   async get(endpoint, params = {}) {
-    const queryString = new URLSearchParams(params).toString()
-    const url = queryString ? `${endpoint}?${queryString}` : endpoint
-    return this.request(url, { method: "GET" })
+    return this.request(endpoint, { method: "GET", params })
   }
 
   async post(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
+    return this.request(endpoint, { method: "POST", data })
   }
 
   async put(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    })
+    return this.request(endpoint, { method: "PUT", data })
   }
 
   async delete(endpoint) {
@@ -78,10 +67,7 @@ class ApiService {
   }
 
   async patch(endpoint, data = {}) {
-    return this.request(endpoint, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    })
+    return this.request(endpoint, { method: "PATCH", data })
   }
 
   // File upload method
@@ -96,7 +82,7 @@ class ApiService {
     return this.request(endpoint, {
       method: "POST",
       headers,
-      body: formData,
+      data: formData,
       auth: false, // Don't add Content-Type for FormData
     })
   }

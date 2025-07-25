@@ -98,14 +98,14 @@ const DashboardPage = () => {
   const overdue = stats?.allotments?.overdue ?? stats?.overdue ?? "--";
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Overview of your laptop allotment system</p>
+    <div className="p-4 sm:p-8">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 text-sm sm:text-base">Overview of your laptop allotment system</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -114,9 +114,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Laptops</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {totalLaptops}
-                </p>
+                <p className="text-3xl font-bold text-gray-900">{totalLaptops}</p>
               </div>
             </div>
           </CardContent>
@@ -132,9 +130,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Allotted</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {allotted}
-                </p>
+                <p className="text-3xl font-bold text-gray-900">{allotted}</p>
               </div>
             </div>
           </CardContent>
@@ -150,9 +146,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Available</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {available}
-                </p>
+                <p className="text-3xl font-bold text-gray-900">{available}</p>
               </div>
             </div>
           </CardContent>
@@ -166,23 +160,21 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Overdue</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {overdue}
-                </p>
+                <p className="text-3xl font-bold text-gray-900">{overdue}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-8">
         {/* Allotment Trends */}
         <Card>
           <CardHeader>
             <CardTitle>Allotment Trends</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg flex items-center justify-center">
+            <div className="h-48 sm:h-64 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg flex items-center justify-center">
               {trendsData ? (
                 <Bar
                   data={trendsData}
@@ -190,12 +182,12 @@ const DashboardPage = () => {
                     responsive: true,
                     plugins: { legend: { position: "top" } },
                   }}
-                  height={220}
+                  height={180}
                 />
               ) : (
                 <div className="text-center">
-                  <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">No trend data</p>
+                  <TrendingUp className="w-8 sm:w-12 h-8 sm:h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm sm:text-base">No trend data</p>
                 </div>
               )}
             </div>
@@ -208,7 +200,7 @@ const DashboardPage = () => {
             <CardTitle>Organization Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg flex items-center justify-center">
+            <div className="h-48 sm:h-64 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg flex items-center justify-center">
               {distributionData ? (
                 <Pie
                   data={distributionData}
@@ -216,12 +208,12 @@ const DashboardPage = () => {
                     responsive: true,
                     plugins: { legend: { position: "right" } },
                   }}
-                  height={220}
+                  height={180}
                 />
               ) : (
                 <div className="text-center">
-                  <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">No distribution data</p>
+                  <Building2 className="w-8 sm:w-12 h-8 sm:h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm sm:text-base">No distribution data</p>
                 </div>
               )}
             </div>
@@ -229,65 +221,8 @@ const DashboardPage = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {activities && activities.length > 0 ? (
-                activities.map((activity, idx) => (
-                  <div key={idx} className="flex items-center space-x-4">
-                    <div
-                      className={`w-2 h-2 rounded-full ${activity.type === "allot" ? "bg-green-500" :
-                          activity.type === "add_org" ? "bg-blue-500" :
-                            activity.type === "return" ? "bg-yellow-500" :
-                              activity.type === "overdue" ? "bg-red-500" : "bg-gray-400"
-                        }`}
-                    ></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.message}</p>
-                      <p className="text-xs text-gray-500">{activity.timeAgo}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500 text-center">No recent activities</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Button className="w-full justify-start" variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Organization
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Products XLSX
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <FileText className="w-4 h-4 mr-2" />
-                Generate Invoice
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Eye className="w-4 h-4 mr-2" />
-                View Overdue Items →
-              </Button>
-            </div>
-          </CardContent>
-        </Card> */}
-      </div>
-      {error && <div className="text-red-500 mt-4">{error}</div>}
+    
+      {error && <div className="text-red-500 mt-4 text-sm sm:text-base">{error}</div>}
     </div>
   )
 }

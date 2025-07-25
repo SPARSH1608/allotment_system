@@ -38,13 +38,14 @@ connectDB();
 
 app.use(
   cors({
-    origin: [,
-      "https://allotmentsystem-ec5rk6xnl-sparsh1608s-projects.vercel.app",
-      "https://allotmentsystem.vercel.app",
-      process.env.CLIENT_URL || "http://localhost:5173"
+    origin: [
+      "http://localhost:5173", // Frontend development server
+      "https://allotmentsystem-ec5rk6xnl-sparsh1608s-projects.vercel.app", // Production frontend
+      "https://allotmentsystem.vercel.app", // Alternate production frontend
     ],
-    credentials: true,
-  }),
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
+    credentials: true, // Allow cookies and credentials
+  })
 )
 
 // Body parser middleware

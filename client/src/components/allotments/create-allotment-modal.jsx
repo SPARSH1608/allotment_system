@@ -1,34 +1,30 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useAppDispatch, useProducts, useOrganizations } from "../../hooks/useRedux"
-import { fetchProducts } from "../../store/slices/productSlice"
-import { fetchOrganizations } from "../../store/slices/organizationSlice"
-import { createAllotment } from "../../store/slices/allotmentSlice"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Label } from "../ui/label"
-import { Modal } from "../ui/modal"
+import { useState, useEffect } from "react";
+import { useAppDispatch, useProducts, useOrganizations } from "../../hooks/useRedux";
+import { fetchProducts } from "../../store/slices/productSlice";
+import { fetchOrganizations } from "../../store/slices/organizationSlice";
+import { createAllotment } from "../../store/slices/allotmentSlice";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Modal } from "../ui/modal";
 
 export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId }) {
-  const dispatch = useAppDispatch()
-  const { products } = useProducts()
-  const { organizations } = useOrganizations()
+  const dispatch = useAppDispatch();
+  const { products } = useProducts();
+  const { organizations } = useOrganizations();
 
-  // Helper to get next month date string (YYYY-MM-DD), handles year change
   const getNextMonthDate = (dateStr) => {
-    const date = new Date(dateStr)
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    // Set to next month, day stays the same (or last day of next month if needed)
-    const nextMonth = new Date(year, month + 1, date.getDate())
-    // If day overflows, JS Date auto-corrects to next month, so clamp to last day of next month
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const nextMonth = new Date(year, month + 1, date.getDate());
     if (nextMonth.getMonth() !== (month + 1) % 12) {
-      // Overflowed, so set to last day of next month
-      return new Date(year, month + 2, 0).toISOString().split("T")[0]
+      return new Date(year, month + 2, 0).toISOString().split("T")[0];
     }
-    return nextMonth.toISOString().split("T")[0]
-  }
+    return nextMonth.toISOString().split("T")[0];
+  };
 
   const [formData, setFormData] = useState({
     laptopId: "",
@@ -37,87 +33,77 @@ export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId })
     dueDate: getNextMonthDate(new Date().toISOString().split("T")[0]),
     rentPer30Days: "",
     location: "",
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  // Set default organizationId when modal opens or defaultOrganizationId changes
   useEffect(() => {
     if (isOpen && defaultOrganizationId) {
       setFormData((prev) => ({
         ...prev,
-        organizationId: defaultOrganizationId
-      }))
+        organizationId: defaultOrganizationId,
+      }));
     }
-    // eslint-disable-next-line
-  }, [isOpen, defaultOrganizationId])
+  }, [isOpen, defaultOrganizationId]);
 
   useEffect(() => {
     if (isOpen) {
-      if (!products || products.length === 0) dispatch(fetchProducts())
-      if (!organizations || organizations.length === 0) dispatch(fetchOrganizations())
+      if (!products || products.length === 0) dispatch(fetchProducts());
+      if (!organizations || organizations.length === 0) dispatch(fetchOrganizations());
     }
-  }, [isOpen, dispatch, products, organizations])
+  }, [isOpen, dispatch, products, organizations]);
 
-  // Update dueDate when handoverDate changes
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
       dueDate: getNextMonthDate(prev.handoverDate),
-    }))
-    // eslint-disable-next-line
-  }, [formData.handoverDate])
+    }));
+  }, [formData.handoverDate]);
 
-  // When organizationId changes, set location to organization's location by default
   useEffect(() => {
     if (formData.organizationId) {
-      const selectedOrg = organizations.find(org => org._id === formData.organizationId)
+      const selectedOrg = organizations.find((org) => org._id === formData.organizationId);
       if (selectedOrg && selectedOrg.location && formData.location !== selectedOrg.location) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          location: selectedOrg.location
-        }))
+          location: selectedOrg.location,
+        }));
       }
     }
-    // eslint-disable-next-line
-  }, [formData.organizationId, organizations])
+  }, [formData.organizationId, organizations]);
 
-  // When laptopId changes, set rentPer30Days to product's baseRent by default
   useEffect(() => {
     if (formData.laptopId) {
-      const selectedProduct = products.find(prod => prod._id === formData.laptopId)
+      const selectedProduct = products.find((prod) => prod._id === formData.laptopId);
       if (
         selectedProduct &&
         selectedProduct.baseRent !== undefined &&
         String(formData.rentPer30Days) !== String(selectedProduct.baseRent)
       ) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          rentPer30Days: selectedProduct.baseRent
-        }))
+          rentPer30Days: selectedProduct.baseRent,
+        }));
       }
     }
-    // eslint-disable-next-line
-  }, [formData.laptopId, products])
+  }, [formData.laptopId, products]);
 
-  // Filter products to only those with status "Available"
   const availableProducts = products.filter(
     (product) => product.status && product.status.toLowerCase() === "available"
-  )
+  );
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
-      // Convert handoverDate and dueDate to ISO string
       const payload = {
         ...formData,
         handoverDate: new Date(formData.handoverDate).toISOString(),
         dueDate: new Date(formData.dueDate).toISOString(),
         rentPer30Days: Number(formData.rentPer30Days),
-      }
-      await dispatch(createAllotment(payload)).unwrap()
-      onClose()
+      };
+      await dispatch(createAllotment(payload)).unwrap();
+      onClose();
       setFormData({
         laptopId: "",
         organizationId: defaultOrganizationId || "",
@@ -125,27 +111,29 @@ export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId })
         dueDate: getNextMonthDate(new Date().toISOString().split("T")[0]),
         rentPer30Days: "",
         location: "",
-      })
+      });
     } catch (error) {
-      console.error("Failed to create allotment:", error)
+      console.error("Failed to create allotment:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Allotment">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="laptopId">Product *</Label>
+            <Label htmlFor="laptopId" className="text-xs sm:text-sm">
+              Product *
+            </Label>
             <select
               id="laptopId"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs sm:text-sm"
               value={formData.laptopId}
               onChange={(e) => handleInputChange("laptopId", e.target.value)}
               required
@@ -159,14 +147,16 @@ export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId })
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="organizationId">Organization *</Label>
+            <Label htmlFor="organizationId" className="text-xs sm:text-sm">
+              Organization *
+            </Label>
             <select
               id="organizationId"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs sm:text-sm"
               value={formData.organizationId}
               onChange={(e) => handleInputChange("organizationId", e.target.value)}
               required
-              disabled={!!defaultOrganizationId} // Disable if defaultOrganizationId is provided
+              disabled={!!defaultOrganizationId}
             >
               <option value="">Select Organization</option>
               {organizations.map((org) => (
@@ -179,20 +169,26 @@ export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId })
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="handoverDate">Allotment Date *</Label>
+            <Label htmlFor="handoverDate" className="text-xs sm:text-sm">
+              Allotment Date *
+            </Label>
             <Input
               id="handoverDate"
               type="date"
+              className="text-xs sm:text-sm"
               value={formData.handoverDate}
               onChange={(e) => handleInputChange("handoverDate", e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dueDate">Due Date *</Label>
+            <Label htmlFor="dueDate" className="text-xs sm:text-sm">
+              Due Date *
+            </Label>
             <Input
               id="dueDate"
               type="date"
+              className="text-xs sm:text-sm"
               value={formData.dueDate}
               onChange={(e) => handleInputChange("dueDate", e.target.value)}
               required
@@ -201,19 +197,25 @@ export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId })
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="rentPer30Days">Monthly Rent (₹) *</Label>
+            <Label htmlFor="rentPer30Days" className="text-xs sm:text-sm">
+              Monthly Rent (₹) *
+            </Label>
             <Input
               id="rentPer30Days"
               type="number"
+              className="text-xs sm:text-sm"
               value={formData.rentPer30Days}
               onChange={(e) => handleInputChange("rentPer30Days", e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location">Location *</Label>
+            <Label htmlFor="location" className="text-xs sm:text-sm">
+              Location *
+            </Label>
             <Input
               id="location"
+              className="text-xs sm:text-sm"
               value={formData.location}
               onChange={(e) => handleInputChange("location", e.target.value)}
               required
@@ -221,15 +223,16 @@ export function CreateAllotmentModal({ isOpen, onClose, defaultOrganizationId })
           </div>
         </div>
         <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose} className="text-xs sm:text-sm">
             Cancel
           </Button>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading} className="text-xs sm:text-sm">
             {loading ? "Creating..." : "Create Allotment"}
           </Button>
         </div>
       </form>
     </Modal>
-  )
+  );
 }
-export default CreateAllotmentModal
+
+export default CreateAllotmentModal;

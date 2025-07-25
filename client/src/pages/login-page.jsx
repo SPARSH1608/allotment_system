@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { useAppDispatch, useAuthLoading, useIsAuthenticated, useAuth } from "../hooks/useRedux"
 import { loginUser, clearError } from "../store/slices/authSlice"
 
+
 export function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -24,6 +25,7 @@ export function LoginPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    console.log("Logging in with:", { email, password })
     dispatch(loginUser({ email, password }))
   }
 
@@ -34,11 +36,11 @@ export function LoginPage() {
   }, [dispatch])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-6 px-4 sm:px-6">
+      <Card className="w-full max-w-sm sm:max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Universal Network</CardTitle>
-          <p className="text-gray-600">Sign in to your account</p>
+          <CardTitle className="text-xl sm:text-2xl font-bold">Universal Network</CardTitle>
+          <p className="text-gray-600 text-sm sm:text-base">Sign in to your account</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
